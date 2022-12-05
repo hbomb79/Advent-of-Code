@@ -9,39 +9,28 @@ import scala.util.Failure
 import scala.util.matching.Regex
 import main.Puzzle
 
-/** Advent of Code 2022 - Puzzle Four
-  *
-  * Given a file which has a multiple lists of numbers, each list/line
-  * containing two pairs, output the number of times that a pair fully contains
-  * the other pair, and the number of times a pair only partially intersects
-  * with another
-  */
-
 object PuzzleFour extends Puzzle {
-  override def run(filepath: String): Unit = {
-    val assignments = loadInputFromFile(filepath)
+  override def partOne(lines: Seq[String]): Unit = {
+    val fullyOverlapping = extractCleaningAssignments(lines).count(a =>
+      CleaningRange.isFullyOverlapping(a.first, a.second)
+    )
 
-    val (fullOverlaps, partialOverlaps) = assignments.foldLeft((0, 0)) {
-      case ((fullAcc, partialAcc), CleaningAssignment(first, second)) =>
-        val fullDelta =
-          if (CleaningRange.isFullyOverlapping(first, second)) 1 else 0
-        val partialDelta =
-          if (CleaningRange.isOverlapping(first, second)) 1 else 0
-
-        (fullAcc + fullDelta, partialAcc + partialDelta)
-    }
-
-    println(s"Fully overlapping assignments: ${fullOverlaps}")
-    println(s"Partially intersecting assignments: ${partialOverlaps}")
+    println(s"Fully overlapping assignments: ${fullyOverlapping}")
   }
 
-  private def loadInputFromFile(
-      filepath: String
+  override def partTwo(lines: Seq[String]): Unit = {
+    val partiallyOverlapping = extractCleaningAssignments(lines).count(a =>
+      CleaningRange.isOverlapping(a.first, a.second)
+    )
+
+    println(s"Partially overlapping assignments: ${partiallyOverlapping}")
+  }
+
+  private def extractCleaningAssignments(
+      lines: Seq[String]
   ): Seq[CleaningAssignment] = {
     val CleaningAreaRegexp = "(\\d+)\\-(\\d+),(\\d+)\\-(\\d+)".r
-    Source
-      .fromFile(filepath)
-      .getLines()
+    lines
       .map(line =>
         CleaningAreaRegexp.findFirstMatchIn(line) match {
           case None =>

@@ -8,32 +8,25 @@ import scala.util.Success
 import scala.util.Failure
 import main.Puzzle
 
-/** Advent of Code 2022 - Puzzle Three
-  *
-  * Given a file which has a multiple lists of letters, where each list
-  * represents the concatentated contents of two compartments for each rucksack,
-  * this program must count and classify the contents of each compartment and
-  * find and count the duplicated items in each.
-  */
-
 object PuzzleThree extends Puzzle {
-  override def run(filepath: String): Unit = {
-    loadInputFromFile(filepath) match {
-      case Left(err) => println(s"ERR! ${err.toString()}")
-      case Right(rucksacks) =>
-        val duplicates = findDuplicatesItemsInEachRucksack(rucksacks)
-        val identities = findIdentifyingItemItemsForGroups(rucksacks).toSeq
-        identities.flatten match {
-          case flattened if flattened.length != identities.length =>
-            println(
-              s"ERR! One or more group identities could not be calculated (len diff ${flattened.length} != ${identities.length}"
-            )
-          case flattened =>
-            println(
-              s"Flattened sum of group identity item priorities: ${flattened.sum}"
-            )
-        }
+  override def partOne(lines: Seq[String]): Unit = {
+    val rucksacks = extractRucksacks(lines)
+    val duplicates = findDuplicatesItemsInEachRucksack(rucksacks).flatten
+    println(s"Sum of duplicate item priorities: ${duplicates.sum}")
+  }
 
+  override def partTwo(lines: Seq[String]): Unit = {
+    val rucksacks = extractRucksacks(lines)
+    val identities = findIdentifyingItemItemsForGroups(rucksacks).toSeq
+    identities.flatten match {
+      case flattened if flattened.length != identities.length =>
+        println(
+          s"ERR! One or more group identities could not be calculated (len diff ${flattened.length} != ${identities.length}"
+        )
+      case flattened =>
+        println(
+          s"Flattened sum of group identity item priorities: ${flattened.sum}"
+        )
     }
   }
 
@@ -72,69 +65,46 @@ object PuzzleThree extends Puzzle {
     }
   }
 
-  /** Given a filepath, this method opens the file at that location (if any) and
-    * loads the data by reading each line, finding the priority for each item on
-    * each line, and then splitting the line in half in order to construct a
-    * [[Rucksack]] with two equally sized [[Compartment]]s
-    *
-    * @param filepath
-    *   The filepath to load
-    * @return
-    *   The rucksacks from the file
-    */
-  private def loadInputFromFile(
-      filepath: String
-  ): Either[PuzzleError, Seq[Rucksack]] = {
-    Using(Source.fromFile(filepath)) { case source =>
-      source
-        .getLines()
-        .map(line =>
-          line.map(char =>
-            Item.getPriority(char) match {
-              case Some(priority) => priority
-              case None =>
-                throw new IllegalArgumentException(
-                  s"Invalid char '$char' found in line $line"
-                )
-            }
-          )
+  private def extractRucksacks(
+      lines: Seq[String]
+  ): Seq[Rucksack] =
+    lines
+      .map(line =>
+        line.map(char =>
+          Item.getPriority(char) match {
+            case Some(priority) => priority
+            case None =>
+              throw new IllegalArgumentException(
+                s"Invalid char '$char' found in line $line"
+              )
+          }
         )
-        .map { priorities =>
-          val (compA, compB) = priorities.splitAt(priorities.length / 2)
-          Rucksack(
-            Compartment(compA),
-            Compartment(compB)
-          )
-        }
-        .toSeq
-    }.toEither match {
-      case Left(throwable) =>
-        Left(
-          PuzzleError(
-            s"Failed to construct source with filepath $filepath: ${throwable.getMessage()}"
-          )
+      )
+      .map { priorities =>
+        val (compA, compB) = priorities.splitAt(priorities.length / 2)
+        Rucksack(
+          Compartment(compA),
+          Compartment(compB)
         )
-      case Right(value) => Right(value)
-    }
-  }
-}
+      }
 
-case class Compartment(itemPriorities: Seq[Int])
-case class Rucksack(compOne: Compartment, compTwo: Compartment)
+  case class Compartment(itemPriorities: Seq[Int])
+  case class Rucksack(compOne: Compartment, compTwo: Compartment)
 
-object Item {
-  private final val BaseUppercasePriority = 27
-  private final val BaseLowercasePriority = 1
+  object Item {
+    private final val BaseUppercasePriority = 27
+    private final val BaseLowercasePriority = 1
 
-  def getPriority(char: Char): Option[Int] = {
-    char.toInt match {
-      case c if c >= 'A'.toInt && c.toInt <= 'Z'.toInt =>
-        val index = c - 'A'.toInt
-        Some(index + BaseUppercasePriority)
-      case c if c >= 'a'.toInt && c.toInt <= 'z'.toInt =>
-        val index = c - 'a'.toInt
-        Some(index + BaseLowercasePriority)
-      case _ => None
+    def getPriority(char: Char): Option[Int] = {
+      char.toInt match {
+        case c if c >= 'A'.toInt && c.toInt <= 'Z'.toInt =>
+          val index = c - 'A'.toInt
+          Some(index + BaseUppercasePriority)
+        case c if c >= 'a'.toInt && c.toInt <= 'z'.toInt =>
+          val index = c - 'a'.toInt
+          Some(index + BaseLowercasePriority)
+        case _ => None
+      }
     }
   }
 }

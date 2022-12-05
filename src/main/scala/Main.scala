@@ -8,7 +8,8 @@ import scala.util.Success
 import puzzles.*
 
 trait Puzzle {
-  def run(filepath: String): Unit
+  def partOne(fileLines: Seq[String]): Unit
+  def partTwo(fileLines: Seq[String]): Unit
 }
 
 case class PuzzleError(message: String)
@@ -55,11 +56,14 @@ private def runPuzzles(puzzles: Seq[Puzzle]): Unit = {
       )
     }
 
-    // Using(Source.fromFile(s"resources/puzzle_$index.dat")) { source =>
+    val oneBasedIndex = index + 1
+    Using(Source.fromFile(s"resources/puzzle_${oneBasedIndex}.dat")) { source =>
+      val lines = source.getLines().toSeq
 
-    // }
-    println(s"== EXECUTING PUZZLE ${index + 1} ==\n")
-    puzzle.run(s"resources/puzzle_${index + 1}.dat")
-    println(s"== PUZZLE ${index + 1} EXECUTION FINISH ==\n")
+      print(s"-- Puzzle $oneBasedIndex \nPart One: ")
+      puzzle.partOne(lines)
+      print("Part Two: ")
+      puzzle.partTwo(lines)
+    }.get
   }
 }
