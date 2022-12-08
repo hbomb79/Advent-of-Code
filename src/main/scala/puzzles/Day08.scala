@@ -34,12 +34,12 @@ object PuzzleEight extends Puzzle {
       point: Point
   ): Int = {
     val height = grid.at(point)
-    val (toLeft, toRight, above, below) =
-      grid.adjacent(point)
+    val (left, right, above, below) =
+      grid.rays(point)
 
-    Seq(toLeft.reverse, toRight, above.reverse, below)
-      .map(l => countUntil(l, height))
-      .reduce((a, b) => a * b)
+    Seq(left.reverse, right, above.reverse, below)
+      .map(countUntil(_, height))
+      .reduce(_ * _)
   }
 
   /** Tests if the point provided can "see" the edge of the grid in at least one
@@ -56,11 +56,11 @@ object PuzzleEight extends Puzzle {
       point: Point
   ): Boolean = {
     val height = grid.at(point)
-    val (toLeft, toRight, above, below) =
-      grid.adjacent(point)
+    val (left, right, above, below) =
+      grid.rays(point)
 
-    toLeft.max < height
-    || toRight.max < height
+    left.max < height
+    || right.max < height
     || above.max < height
     || below.max < height
   }
@@ -105,7 +105,7 @@ object PuzzleEight extends Puzzle {
     def at(point: Point): Int =
       rows(point.y)(point.x)
 
-    def adjacent(
+    def rays(
         point: Point
     ): (Seq[Int], Seq[Int], Seq[Int], Seq[Int]) = {
       val hor = rows(point.y).splitAt(point.x)
