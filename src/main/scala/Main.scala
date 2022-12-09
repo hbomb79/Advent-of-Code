@@ -23,7 +23,8 @@ object Puzzles {
     PuzzleFive,
     PuzzleSix,
     PuzzleSeven,
-    PuzzleEight
+    PuzzleEight,
+    PuzzleNine
   )
 }
 
