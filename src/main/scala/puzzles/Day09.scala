@@ -2,6 +2,7 @@ package puzzles
 
 import main.Puzzle
 import scala.annotation.newMain
+import scala.annotation.tailrec
 
 object PuzzleNine extends Puzzle {
   override def partOne(fileLines: Seq[String]): Unit = {
@@ -54,6 +55,7 @@ object PuzzleNine extends Puzzle {
     * @return
     *   The parts after the move has been applied
     */
+  @tailrec
   private def applyMoveToParts(
       move: Char,
       parts: Seq[Point],
