@@ -24,7 +24,8 @@ object Puzzles {
     PuzzleSix,
     PuzzleSeven,
     PuzzleEight,
-    PuzzleNine
+    PuzzleNine,
+    PuzzleTen
   )
 }
 
@@ -61,13 +62,14 @@ private def runPuzzles(puzzles: Seq[Puzzle]): Unit = {
     }
 
     val oneBasedIndex = index + 1
-    Using(Source.fromFile(s"resources/puzzle_${oneBasedIndex}.dat")) { source =>
-      val lines = source.getLines().toSeq
+    Using(Source.fromFile(f"resources/puzzle_${oneBasedIndex}%02d.dat")) {
+      source =>
+        val lines = source.getLines().toSeq
 
-      print(s"-- Puzzle $oneBasedIndex \nPart One: ")
-      puzzle.partOne(lines)
-      print("Part Two: ")
-      puzzle.partTwo(lines)
+        print(s"-- Puzzle $oneBasedIndex \nPart One: ")
+        puzzle.partOne(lines)
+        print("Part Two: ")
+        puzzle.partTwo(lines)
     }.get
   }
 }
