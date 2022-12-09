@@ -1,15 +1,10 @@
 // For more information on writing tests, see
 // https://scalameta.org/munit/docs/getting-started.html
 import puzzles.PuzzleNine._
-class MySuite extends munit.FunSuite {
-
-  test("example test that succeeds") {
-    val obtained = 42
-    val expected = 42
-    assertEquals(obtained, expected)
-  }
-
-  test("Point two steps away on X axis moves closer") {
+class PuzzleNine extends munit.FunSuite {
+  test(
+    "Tail two steps away from the head on the X axis will move to become adjacent"
+  ) {
     val head = Point(3, 1)
     val tail = Point(1, 1)
     val out = tail.moveTowards(head)
@@ -17,7 +12,9 @@ class MySuite extends munit.FunSuite {
     assertEquals(out.y, 1)
   }
 
-  test("Point two steps away on Y axis moves closer") {
+  test(
+    "Tail two steps away from the head on the Y axis will move to become adjacent"
+  ) {
     val head = Point(1, 3)
     val tail = Point(1, 1)
     val out = tail.moveTowards(head)
@@ -25,7 +22,9 @@ class MySuite extends munit.FunSuite {
     assertEquals(out.y, 2)
   }
 
-  test("Point two steps away diagonally (vert) moves closer") {
+  test(
+    "Tail two steps away from the head diagonally (vertically) moves to become adjacent"
+  ) {
     /*
      * _ _ _ _
      * _ _ H _
@@ -42,7 +41,9 @@ class MySuite extends munit.FunSuite {
     assertEquals(out.y, 2)
   }
 
-  test("Point two steps away diagonally (horiz) moves closer") {
+  test(
+    "Tail two steps away from the head diagonally (horizontally) moves to become adjacent"
+  ) {
     /*
      * _ _ _ _ _
      * _ _ _ _ _
