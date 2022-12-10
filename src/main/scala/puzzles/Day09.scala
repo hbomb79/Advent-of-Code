@@ -4,13 +4,19 @@ import main.Puzzle
 import scala.annotation.newMain
 import scala.annotation.tailrec
 
+/** Original solution for Day 9
+  */
 object PuzzleNine extends Puzzle {
   override def partOne(fileLines: Seq[String]): Unit = {
     println(findTailPositionsOfRope(extractMoves(fileLines), 2).size)
   }
   override def partTwo(fileLines: Seq[String]): Unit = {
-    println(findTailPositionsOfRope(extractMoves(fileLines), 10).size)
+    val tail = getTailPositions(fileLines, 10)
+    println(tail.size)
   }
+
+  def getTailPositions(lines: Seq[String], len: Int) =
+    findTailPositionsOfRope(extractMoves(lines), len)
 
   /** Given a set of moves for the rope, this method will apply all the moves to
     * a rope of the length provided (where all knots in the rope start stacked
