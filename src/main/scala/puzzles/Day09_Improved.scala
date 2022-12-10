@@ -44,7 +44,7 @@ object PuzzleNineImproved extends Puzzle {
     }
 
   private def applyMovement(movement: Movement, rope: Rope): Rope =
-    (0 to rope.length - 1).foldLeft(rope)((acc, idx) =>
+    rope.indices.foldLeft(rope)((acc, idx) =>
       val current = acc(idx)
       val mvmt =
         if (idx == 0) movement
