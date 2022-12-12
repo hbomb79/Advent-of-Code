@@ -26,7 +26,8 @@ object Puzzles {
     PuzzleEight,
     PuzzleNineImproved,
     PuzzleTen,
-    PuzzleEleven
+    PuzzleEleven,
+    PuzzleTwelve
   )
 }
 
