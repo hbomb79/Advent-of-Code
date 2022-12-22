@@ -2,7 +2,6 @@ package puzzles
 
 import main.Puzzle
 import scala.annotation.tailrec
-import scala.annotation.newMain
 
 object PuzzleTwentyOne extends Puzzle {
   override def partOne(fileLines: Seq[String]): Unit = {
