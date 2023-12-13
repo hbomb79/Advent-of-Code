@@ -48,22 +48,22 @@ let read_mapping line =
 let read_section lines =
   let title_line = List.nth lines 0 in
   let title = String.split_on_char ' ' title_line in
-  let sections = Advent.drop 1 lines |> List.map read_mapping in
+  let sections = Core.List.drop lines 1 |> List.map read_mapping in
   List.nth title 0, sections
 ;;
 
 let read_seeds line =
-  Advent.string_tail line 7 |> String.split_on_char ' ' |> List.map int_of_string
+  Advent.Strings.string_tail line 7 |> String.split_on_char ' ' |> List.map int_of_string
 ;;
 
 let min_list lst = List.fold_left min (List.hd lst) (List.tl lst)
 
 (* Part One *)
 let () =
-  let lines = Advent.read_lines "./inputs/day05.txt" in
-  let partitioned = Advent.partition_lines lines [] [] in
+  let lines = Advent.Strings.read_lines "./inputs/day05.txt" in
+  let partitioned = Advent.Lists.partition_lines lines [] [] in
   let seeds = read_seeds (List.nth (List.nth partitioned 0) 0) in
-  let sections = List.map read_section (Advent.drop 1 partitioned) in
+  let sections = List.map read_section (Core.List.drop partitioned 1) in
   let fully_mapped =
     List.map (fun seed_identifier -> apply_sections sections seed_identifier) seeds
   in
@@ -75,7 +75,7 @@ let rec read_seed_ranges seeds acc =
   | [] -> acc
   | start :: range :: rest ->
     read_seed_ranges rest (acc @ [ { start; stop = start + range - 1 } ])
-  | _ -> Advent.unreachable ()
+  | _ -> failwith "unreachable"
 ;;
 
 let apply_rangewise_section (identifier_ranges : range list) (_, section_ranges) =
@@ -96,11 +96,11 @@ let process_sections ranges section =
 
 (* Part Two *)
 let () =
-  let lines = Advent.read_lines "./inputs/day05.txt" in
-  let partitioned = Advent.partition_lines lines [] [] in
+  let lines = Advent.Strings.read_lines "./inputs/day05.txt" in
+  let partitioned = Advent.Lists.partition_lines lines [] [] in
   let seeds = read_seeds (List.nth (List.nth partitioned 0) 0) in
   let all_seeds = read_seed_ranges seeds [] in
-  let sections = List.map read_section (Advent.drop 1 partitioned) in
+  let sections = List.map read_section (Core.List.drop partitioned 1) in
   let mapped =
     process_sections all_seeds sections |> List.sort (fun a b -> compare a.start b.start)
   in

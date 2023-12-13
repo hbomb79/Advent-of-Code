@@ -1,3 +1,7 @@
+open Advent.Iter
+open Advent.Strings
+open Advent.Math
+
 type direction =
   | Left
   | Right
@@ -15,14 +19,14 @@ let parse_direction ch =
   match ch with
   | 'L' -> Left
   | 'R' -> Right
-  | _ -> Advent.unreachable ()
+  | _ -> failwith "invalid character"
 ;;
 
 let parse_directions line =
   String.to_seq line
   |> List.of_seq
   |> List.map parse_direction
-  |> Advent.CyclicIterator.create_infinite_iterator
+  |> create_infinite_iterator
 ;;
 
 let rec count_steps directions nodes count current target =
@@ -40,9 +44,9 @@ let rec count_steps directions nodes count current target =
 
 (* Part One *)
 let () =
-  let lines = Advent.read_lines "./inputs/day08.txt" in
+  let lines = read_lines "./inputs/day08.txt" in
   let directions = parse_directions (List.nth lines 0) in
-  let nodes = List.map parse_node (Advent.drop 2 lines) in
+  let nodes = List.map parse_node (Core.List.drop lines 2) in
   let steps = count_steps directions nodes 0 "AAA" "ZZZ" in
   let _ = Printf.printf "Part One: %d\n" steps in
   ()
@@ -60,7 +64,7 @@ let rec find_ghost_cycle directions nMap count current acc =
       match NodeMap.get current nMap, direction with
       | Some (l, _), Left -> l
       | Some (_, r), Right -> r
-      | _ -> Advent.unreachable ()
+      | _ -> failwith "unreachable"
     in
     find_ghost_cycle directions nMap (count + 1) newCurrent newAcc
 ;;
@@ -72,9 +76,9 @@ let rec find_ghost_cycle directions nMap count current acc =
    we can find how many iterations it would take for all ghosts to simulatneously land on 'Z' tiles
 *)
 let () =
-  let lines = Advent.read_lines "./inputs/day08.txt" in
+  let lines = read_lines "./inputs/day08.txt" in
   let directions = parse_directions (List.nth lines 0) in
-  let nodes = List.map parse_node (Advent.drop 2 lines) in
+  let nodes = List.map parse_node (Core.List.drop lines 2) in
   let nMap = NodeMap.of_list nodes in
   let ghost_cycle_frequency =
     List.filter (fun (label, _) -> String.ends_with ~suffix:"A" label) nodes
@@ -83,9 +87,9 @@ let () =
   in
   let cycles_lcm =
     List.fold_left
-      (fun acc n -> Advent.lcm acc n)
+      (fun acc n -> lcm acc n)
       (List.nth ghost_cycle_frequency 0)
-      (Advent.drop 1 ghost_cycle_frequency)
+      (Core.List.drop ghost_cycle_frequency 1)
   in
   let _ = Printf.printf "LCM of cycles: %d\n" cycles_lcm in
   ()

@@ -64,7 +64,7 @@ let extract line =
    is achieved
 *)
 let () =
-  let input = Advent.read_lines "./inputs/day01.txt" in
+  let input = Advent.Strings.read_lines "./inputs/day01.txt" in
   let predicate acc line = acc + extract line in
   print_endline (string_of_int (List.fold_left predicate 0 input))
 ;;

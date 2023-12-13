@@ -51,7 +51,7 @@ let parse_line line =
 
 (* Part One *)
 let () =
-  let lines = Advent.read_lines "./inputs/day04.txt" in
+  let lines = Advent.Strings.read_lines "./inputs/day04.txt" in
   let cards = List.map parse_line lines in
   let results =
     List.map
@@ -99,7 +99,7 @@ let rec clone_wars card_matches card_quantities bucket_index =
 
 (* Part Two *)
 let () =
-  let lines = Advent.read_lines "./inputs/day04.txt" in
+  let lines = Advent.Strings.read_lines "./inputs/day04.txt" in
   let cards = List.map parse_line lines in
   let card_quantities = List.init (List.length cards) (fun i -> i + 1, 1) in
   let results =

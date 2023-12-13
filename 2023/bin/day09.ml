@@ -1,4 +1,6 @@
 open Core
+open Advent.Lists
+open Advent.Strings
 
 let list_sum = List.reduce_exn ~f:(fun x y -> x + y)
 let calc_diffs = List.fold_left ~init:[] ~f:(fun acc (a, b) -> acc @ [ b - a ])
@@ -6,7 +8,7 @@ let calc_diffs = List.fold_left ~init:[] ~f:(fun acc (a, b) -> acc @ [ b - a ])
 let rec find_diffs acc numbers =
   if List.for_all numbers ~f:(equal 0)
   then acc @ [ numbers ]
-  else find_diffs (acc @ [ numbers ]) (Advent.paired numbers |> calc_diffs)
+  else find_diffs (acc @ [ numbers ]) (paired numbers |> calc_diffs)
 ;;
 
 let rec extrapolate ~select ~op acc histories =
@@ -16,7 +18,7 @@ let rec extrapolate ~select ~op acc histories =
 ;;
 
 let read_histories =
-  Advent.read_lines "./inputs/day09.txt"
+  read_lines "./inputs/day09.txt"
   |> List.map ~f:(fun line -> String.split line ~on:' ' |> List.map ~f:int_of_string)
   |> List.map ~f:(find_diffs [])
   |> List.map ~f:List.rev

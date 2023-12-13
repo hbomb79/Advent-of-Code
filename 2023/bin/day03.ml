@@ -94,7 +94,7 @@ let extract_parts_and_symbols only_gears cells =
 ;;
 
 let base =
-  let lines = Advent.read_lines "./inputs/day03.txt" in
+  let lines = Advent.Strings.read_lines "./inputs/day03.txt" in
   List.mapi (fun i v -> parse_line ~row:i v) lines
   |> List.flatten
   |> extract_parts_and_symbols false

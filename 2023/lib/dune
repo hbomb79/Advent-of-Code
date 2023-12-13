@@ -1,4 +1,5 @@
 (library
  (name advent)
  (preprocess (pps ppx_deriving.show ppx_deriving.ord ppx_variants_conv))
- (libraries core str containers))
+ (libraries core str containers)
+ (modules ranges iter strings ranges searcher lists math))

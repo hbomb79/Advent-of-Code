@@ -59,7 +59,7 @@ let rec rounds_minimum rounds acc =
 
 (* Part One *)
 let () =
-  let lines = Advent.read_lines "./inputs/day02.txt" in
+  let lines = Advent.Strings.read_lines "./inputs/day02.txt" in
   let games = List.map parse_game lines in
   let constraints = { r = 12; g = 13; b = 14 } in
   let f acc game rounds =
@@ -71,7 +71,7 @@ let () =
 
 (* Part Two *)
 let () =
-  let lines = Advent.read_lines "./inputs/day02.txt" in
+  let lines = Advent.Strings.read_lines "./inputs/day02.txt" in
   let games = List.map parse_game lines in
   let minimum = List.map (fun (_, g) -> rounds_minimum g { r = 0; g = 0; b = 0 }) games in
   let powers = List.map (fun min -> min.r * min.g * min.b) minimum in

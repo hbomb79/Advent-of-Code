@@ -1,7 +1,8 @@
 open Core
+open Advent.Strings
 
 let concat_ints_in_string str =
-  Advent.extract_numbers str
+  extract_numbers str
   |> List.map ~f:string_of_int
   |> String.concat ~sep:""
   |> int_of_string
@@ -13,12 +14,12 @@ let find_quadratic_eq_roots t d =
   let c = float_of_int d in
   let discriminant = (b ** 2.0) -. (4.0 *. a *. c) in
   if Float.compare discriminant 0.0 < 0
-  then []
+  then failwith "cannot find roots"
   else (
     let sqrt_discriminant = sqrt discriminant in
     let x1 = (-.b +. sqrt_discriminant) /. (2.0 *. a) in
     let x2 = (-.b -. sqrt_discriminant) /. (2.0 *. a) in
-    [ x1; x2 ])
+    x1, x2)
 ;;
 
 let ints_between f1 f2 =
@@ -26,15 +27,14 @@ let ints_between f1 f2 =
 ;;
 
 let ints_between_quadratic_eq_roots t d =
-  match find_quadratic_eq_roots t d with
-  | [ hi; lo ] -> ints_between hi lo
-  | _ -> Advent.unreachable () |> List.reduce_exn ~f:( * )
+  let hi, lo = find_quadratic_eq_roots t d in
+  ints_between hi lo
 ;;
 
 let () =
-  let lines = Advent.read_lines "./inputs/day06.txt" in
-  let durations = Advent.extract_numbers (List.nth_exn lines 0) in
-  let distances = Advent.extract_numbers (List.nth_exn lines 1) in
+  let lines = read_lines "./inputs/day06.txt" in
+  let durations = extract_numbers (List.nth_exn lines 0) in
+  let distances = extract_numbers (List.nth_exn lines 1) in
   let winning_times_count =
     List.zip_exn durations distances
     |> List.map ~f:(fun (t, d) -> ints_between_quadratic_eq_roots t d)
@@ -44,7 +44,7 @@ let () =
 ;;
 
 let () =
-  let lines = Advent.read_lines "./inputs/day06.txt" in
+  let lines = read_lines "./inputs/day06.txt" in
   let duration = concat_ints_in_string (List.nth_exn lines 0) in
   let distance = concat_ints_in_string (List.nth_exn lines 1) in
   let winning_times_count = ints_between_quadratic_eq_roots duration distance in

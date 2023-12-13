@@ -119,10 +119,9 @@ let parse_line line =
 ;;
 
 let () =
-  let lines = Advent.read_lines "./inputs/day07.txt" in
+  let lines = Advent.Strings.read_lines "./inputs/day07.txt" in
   let hands = List.map parse_line lines in
   let sorted = List.sort compare_hand hands |> List.rev in
-  (* let _ = List.map (fun hand -> print_endline (show_hand hand)) sorted in *)
   let winnings =
     List.mapi (fun index hand -> (index + 1) * int_of_string hand.bet) sorted
   in
