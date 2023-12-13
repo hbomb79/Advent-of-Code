@@ -1,7 +1,6 @@
 package puzzles
 
 import main.Puzzle
-import IterHelper._
 
 object PuzzleNineteen extends Puzzle {
   override def partOne(fileLines: Seq[String]): Unit = {
@@ -134,7 +133,6 @@ object PuzzleNineteen extends Puzzle {
       Blueprint(oo.toInt, co.toInt, bo.toInt, bc.toInt, go.toInt, gb.toInt)
   }
 
-  // TODO Refactor to FP
   def search(start: State) = {
     import collection.mutable.{Set, Map, Queue}
 
