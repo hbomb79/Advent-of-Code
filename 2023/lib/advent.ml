@@ -20,6 +20,19 @@ let rec partition_lines lines building acc =
   | l :: ls -> partition_lines ls (building @ [ l ]) acc
 ;;
 
+let extract_numbers str =
+  let number_regex = Str.regexp "\\b\\([0-9]+\\)\\b" in
+  let rec aux acc start_pos =
+    try
+      let _ = Str.search_forward number_regex str start_pos in
+      let number = int_of_string (Str.matched_group 1 str) in
+      aux (number :: acc) (Str.match_end ())
+    with
+    | _ -> List.rev acc
+  in
+  aux [] 0
+;;
+
 let paired lst =
   let rec aux acc remaining =
     match remaining with
