@@ -1,3 +1,0 @@
-(library
- (name advent)
- (libraries core))
