@@ -6,6 +6,8 @@ let read_lines file =
     String.split_lines x)
 ;;
 
+let string_tail str n = String.sub str ~pos:n ~len:(String.length str - n)
+
 module Searcher = struct
   type direction =
     | Forwards
