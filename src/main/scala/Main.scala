@@ -30,7 +30,10 @@ object Puzzles {
     PuzzleTwelve,
     PuzzleThirteen,
     PuzzleFourteen,
-    PuzzleFifteen
+    PuzzleFifteen,
+    PuzzleSixteen,
+    PuzzleSeventeen,
+    PuzzleEighteen
   )
 }
 
