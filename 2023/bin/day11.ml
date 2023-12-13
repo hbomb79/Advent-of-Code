@@ -40,9 +40,7 @@ let push_galaxies_apart empty_rows empty_cols coefficient ~galaxies =
     | (gx, gy) :: gs ->
       let dy = List.count ~f:(fun r -> r < gy) empty_rows in
       let dx = List.count ~f:(fun r -> r < gx) empty_cols in
-      let fixdx = if coefficient = 1 then 0 else dx in
-      let fixdy = if coefficient = 1 then 0 else dy in
-      let adjusted = gx + (coefficient * dx) - fixdx, gy + (coefficient * dy) - fixdy in
+      let adjusted = gx + (coefficient * dx), gy + (coefficient * dy) in
       aux (adjusted :: acc) gs
   in
   aux [] galaxies
@@ -66,7 +64,7 @@ let _ =
   let empty_rows, empty_cols, galaxies = read_map width height lines in
   let adjuster = push_galaxies_apart empty_rows empty_cols ~galaxies in
   let adjusted_single = adjuster 1 in
-  let adjusted_million = adjuster 1000000 in
+  let adjusted_million = adjuster 999999 in
   let _ = Printf.printf "Part One: %d\n" (sum_distances adjusted_single) in
   let _ = Printf.printf "Part Two: %d\n" (sum_distances adjusted_million) in
   ()
