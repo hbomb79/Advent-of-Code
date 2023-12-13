@@ -20,3 +20,13 @@ let paired lst =
   in
   aux [] lst
 ;;
+
+let rec combinations k l =
+  if k = 0
+  then [ [] ]
+  else (
+    match l with
+    | [] -> []
+    | x :: xs ->
+      List.map ~f:(fun tl -> x :: tl) (combinations (k - 1) xs) @ combinations k xs)
+;;
