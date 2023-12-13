@@ -1,5 +1,5 @@
 (executables
  (public_names day01 day02 day07)
  (names day01 day02 day07)
- (preprocess (pps ppx_deriving.show ppx_deriving.ord))
+ (preprocess (pps ppx_deriving.show ppx_deriving.ord ppx_variants_conv))
  (libraries advent))

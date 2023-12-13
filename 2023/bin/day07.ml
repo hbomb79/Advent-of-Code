@@ -2,7 +2,6 @@ type card =
   | Ace
   | King
   | Queen
-  | Joker
   | Ten
   | Nine
   | Eight
@@ -12,7 +11,8 @@ type card =
   | Four
   | Three
   | Two
-[@@deriving ord]
+  | Joker
+[@@deriving ord, variants]
 
 type kind =
   | FiveOfAKind
@@ -22,76 +22,13 @@ type kind =
   | TwoPair
   | OnePair
   | HighCard
-[@@deriving ord]
+[@@deriving ord, variants]
 
 type hand =
   { kind : kind
   ; cards : card list
   ; bet : string
   }
-
-let is_n_of_a_kind hand n =
-  let card_counts =
-    List.fold_left
-      (fun counts card ->
-        let count =
-          try counts |> List.assoc card with
-          | Not_found -> 0
-        in
-        (card, count + 1) :: List.remove_assoc card counts)
-      []
-      (List.init (String.length hand) (String.get hand))
-  in
-  List.exists (fun (_, count) -> count >= n) card_counts
-;;
-
-let is_one_pair hand =
-  let card_counts =
-    List.fold_left
-      (fun counts card ->
-        let count =
-          try counts |> List.assoc card with
-          | Not_found -> 0
-        in
-        (card, count + 1) :: List.remove_assoc card counts)
-      []
-      (List.init (String.length hand) (String.get hand))
-  in
-  List.exists (fun (_, count) -> count >= 2) card_counts
-;;
-
-let is_two_pair hand =
-  let card_counts =
-    List.fold_left
-      (fun counts card ->
-        let count =
-          try counts |> List.assoc card with
-          | Not_found -> 0
-        in
-        (card, count + 1) :: List.remove_assoc card counts)
-      []
-      (List.init (String.length hand) (String.get hand))
-  in
-  let pair_counts = List.filter (fun (_, count) -> count >= 2) card_counts in
-  List.length pair_counts = 2
-;;
-
-let is_full_house hand =
-  let card_counts =
-    List.fold_left
-      (fun counts card ->
-        let count =
-          try counts |> List.assoc card with
-          | Not_found -> 0
-        in
-        (card, count + 1) :: List.remove_assoc card counts)
-      []
-      (List.init (String.length hand) (String.get hand))
-  in
-  let has_three_of_a_kind = List.exists (fun (_, count) -> count >= 3) card_counts in
-  let has_pair = List.exists (fun (_, count) -> count = 2) card_counts in
-  has_three_of_a_kind && has_pair
-;;
 
 let parse_card ch =
   match ch with
@@ -111,15 +48,52 @@ let parse_card ch =
   | _ -> Failure "Invalid card" |> raise
 ;;
 
-let determine_hand cards =
-  match cards with
-  | hand when is_n_of_a_kind hand 5 -> FiveOfAKind
-  | hand when is_n_of_a_kind hand 4 -> FourOfAKind
-  | hand when is_full_house hand -> FullHouse
-  | hand when is_n_of_a_kind hand 3 -> ThreeOfAKind
-  | hand when is_two_pair hand -> TwoPair
-  | hand when is_one_pair hand -> OnePair
+let get_joker_counts counts =
+  let card_counts = List.map (fun (ch, count) -> parse_card ch, count) counts in
+  let _, joker_counts =
+    try List.find (fun (a, _) -> a = Joker) card_counts with
+    | _ -> Joker, 0
+  in
+  joker_counts
+;;
+
+let get_counts hand =
+  List.fold_left
+    (fun counts card ->
+      let count =
+        try counts |> List.assoc card with
+        | Not_found -> 0
+      in
+      (card, count + 1) :: List.remove_assoc card counts)
+    []
+    (List.init (String.length hand) (String.get hand))
+;;
+
+let compare_count a b =
+  let (_, aCount), (_, bCount) = a, b in
+  compare bCount aCount
+;;
+
+let determine_kind count second_count =
+  match count, second_count with
+  | 5, _ -> FiveOfAKind
+  | 4, _ -> FourOfAKind
+  | 3, 2 -> FullHouse
+  | 3, _ -> ThreeOfAKind
+  | 2, 2 -> TwoPair
+  | 2, _ -> OnePair
   | _ -> HighCard
+;;
+
+let determine_hand_jokered cards =
+  let card_counts = get_counts cards in
+  let cards_sans_joker = List.filter (fun (a, _) -> parse_card a != Joker) card_counts in
+  let joker_count = get_joker_counts card_counts in
+  let sorted_cards = List.sort compare_count cards_sans_joker in
+  match sorted_cards with
+  | (_, x) :: (_, y) :: _ -> determine_kind (x + joker_count) y
+  | (_, x) :: _ -> determine_kind (x + joker_count) 0
+  | _ -> determine_kind joker_count 0
 ;;
 
 let rec compare_hand_cards a b =
@@ -139,7 +113,7 @@ let parse_line line =
   match String.split_on_char ' ' line with
   | [ hand; bet ] ->
     let parsed_hand = List.map parse_card (String.to_seq hand |> List.of_seq) in
-    let kind = determine_hand hand in
+    let kind = determine_hand_jokered hand in
     { kind; cards = parsed_hand; bet }
   | _ -> Failure "Invalid line" |> raise
 ;;
@@ -148,9 +122,10 @@ let () =
   let lines = Advent.read_lines "./inputs/day07.txt" in
   let hands = List.map parse_line lines in
   let sorted = List.sort compare_hand hands |> List.rev in
+  (* let _ = List.map (fun hand -> print_endline (show_hand hand)) sorted in *)
   let winnings =
     List.mapi (fun index hand -> (index + 1) * int_of_string hand.bet) sorted
   in
   let total = List.fold_left (fun acc i -> acc + i) 0 winnings in
-  Printf.printf "done %d\n" total
+  Printf.printf "%d\n" total
 ;;
