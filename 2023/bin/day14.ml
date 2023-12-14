@@ -17,30 +17,6 @@ type grid =
   ; points : rock IntTupleMap.t
   }
 
-let read_char ch =
-  match ch with
-  | 'O' -> Some Rounded
-  | '#' -> Some Solid
-  | _ -> None
-;;
-
-let read_line y line =
-  List.filter_mapi
-    ~f:(fun x ch -> read_char ch |> Option.map ~f:(fun r -> (x, y), r))
-    (String.to_list line)
-;;
-
-let read_lines height lines =
-  let rec aux points y =
-    match y with
-    | y when y = height -> points
-    | _ ->
-      let l = List.nth_exn lines y in
-      aux (points @ read_line y l) (y + 1)
-  in
-  aux [] 0
-;;
-
 let sum_load grid =
   let base_load = grid.height in
   List.map
@@ -49,102 +25,63 @@ let sum_load grid =
   |> List.reduce_exn ~f:( + )
 ;;
 
-(* let print_grid grid = *)
-(*   let ps = IntTupleMap.to_list grid.points in *)
-(*   let num_of_rolling_rocks = *)
-(*     List.filter ~f:(fun (_, t) -> is_rounded t) ps |> List.length *)
-(*   in *)
-(*   let num_of_solid = List.filter ~f:(fun ((_, _), t) -> is_solid t) ps |> List.length in *)
-(*   let _ = *)
-(*     Printf.printf *)
-(*       "Rounded: %d -- Solid: %d -- North Load: %d\n" *)
-(*       num_of_rolling_rocks *)
-(*       num_of_solid *)
-(*       (sum_load grid) *)
-(*   in *)
-(*   for y = 0 to grid.height - 1 do *)
-(*     for x = 0 to grid.width - 1 do *)
-(*       let ch = IntTupleMap.get (x, y) grid.points in *)
-(*       let s = *)
-(*         match ch with *)
-(*         | Some Rounded -> 'O' *)
-(*         | Some Solid -> '#' *)
-(*         | None -> '.' *)
-(*       in *)
-(*       Printf.printf "%c" s *)
-(*     done; *)
-(*     Printf.printf "\n" *)
-(*   done *)
-(* ;; *)
+type direction =
+  | North
+  | East
+  | South
+  | West
 
-(* TODO these duplicated-ish methods make me feel bad... improve this *)
-
-let roll_north grid =
-  let rec aux acc x y min_y =
-    if y = grid.height
-    then aux acc (x + 1) 0 0
-    else if x = grid.width
-    then { grid with points = acc }
-    else (
-      match IntTupleMap.get (x, y) grid.points with
-      | Some Rounded ->
-        let new_acc = IntTupleMap.remove (x, y) acc in
-        aux (IntTupleMap.add (x, min_y) Rounded new_acc) x (y + 1) (min_y + 1)
-      | Some Solid -> aux acc x (y + 1) (y + 1)
-      | None -> aux acc x (y + 1) min_y)
-  in
-  aux grid.points 0 0 0
+let is_roll_at_boundary grid direction (x, y) =
+  match direction with
+  | North when y = grid.height -> Some (x + 1, 0)
+  | South when y = -1 -> Some (x + 1, grid.height - 1)
+  | East when x = -1 -> Some (grid.width - 1, y + 1)
+  | West when x = grid.width -> Some (0, y + 1)
+  | _ -> None
 ;;
 
-let roll_west grid =
-  let rec aux acc x y min_x =
-    if x = grid.width
-    then aux acc 0 (y + 1) 0
-    else if y = grid.height
-    then { grid with points = acc }
-    else (
-      match IntTupleMap.get (x, y) grid.points with
-      | Some Rounded ->
-        let new_acc = IntTupleMap.remove (x, y) acc in
-        aux (IntTupleMap.add (min_x, y) Rounded new_acc) (x + 1) y (min_x + 1)
-      | Some Solid -> aux acc (x + 1) y (x + 1)
-      | None -> aux acc (x + 1) y min_x)
-  in
-  aux grid.points 0 0 0
+let is_roll_complete grid direction (x, y) =
+  match direction with
+  | North | South -> x = grid.width
+  | East | West -> y = grid.height
 ;;
 
-let roll_east grid =
-  let rec aux acc x y max_x =
-    if x = -1
-    then aux acc (grid.width - 1) (y + 1) (grid.width - 1)
-    else if y = grid.height
-    then { grid with points = acc }
-    else (
-      match IntTupleMap.get (x, y) grid.points with
-      | Some Rounded ->
-        let new_acc = IntTupleMap.remove (x, y) acc in
-        aux (IntTupleMap.add (max_x, y) Rounded new_acc) (x - 1) y (max_x - 1)
-      | Some Solid -> aux acc (x - 1) y (x - 1)
-      | None -> aux acc (x - 1) y max_x)
-  in
-  aux grid.points (grid.width - 1) 0 (grid.width - 1)
+let advance_point (x, y) direction =
+  match direction with
+  | North -> x, y + 1
+  | South -> x, y - 1
+  | East -> x - 1, y
+  | West -> x + 1, y
 ;;
 
-let roll_south grid =
-  let rec aux acc x y max_y =
-    if y = -1
-    then aux acc (x + 1) (grid.height - 1) (grid.height - 1)
-    else if x = grid.width
-    then { grid with points = acc }
-    else (
-      match IntTupleMap.get (x, y) grid.points with
-      | Some Rounded ->
-        let new_acc = IntTupleMap.remove (x, y) acc in
-        aux (IntTupleMap.add (x, max_y) Rounded new_acc) x (y - 1) (max_y - 1)
-      | Some Solid -> aux acc x (y - 1) (y - 1)
-      | None -> aux acc x (y - 1) max_y)
+let roll direction grid =
+  let should_reset = is_roll_at_boundary grid direction in
+  let should_complete = is_roll_complete grid direction in
+  let rec aux acc point limit =
+    match should_reset point, should_complete point with
+    | _, true -> { grid with points = acc }
+    | Some (px, py), _ -> aux acc (px, py) (px, py)
+    | _ ->
+      (match IntTupleMap.get point grid.points with
+       | Some Rounded ->
+         let new_acc = IntTupleMap.remove point acc in
+         aux
+           (IntTupleMap.add limit Rounded new_acc)
+           (advance_point point direction)
+           (advance_point limit direction)
+       | Some Solid ->
+         let next = advance_point point direction in
+         aux acc next next
+       | None -> aux acc (advance_point point direction) limit)
   in
-  aux grid.points 0 (grid.height - 1) (grid.height - 1)
+  let start =
+    match direction with
+    | North -> 0, 0
+    | South -> 0, grid.height - 1
+    | East -> grid.width - 1, 0
+    | West -> 0, 0
+  in
+  aux grid.points start start
 ;;
 
 let perform_cycles grid num =
@@ -152,7 +89,7 @@ let perform_cycles grid num =
     match remaining with
     | 0 -> acc
     | _ ->
-      let cycled = roll_north acc |> roll_west |> roll_south |> roll_east in
+      let cycled = roll North acc |> roll West |> roll South |> roll East in
       aux (remaining - 1) cycled
   in
   aux num grid
@@ -171,18 +108,23 @@ let find_cycle grid expected =
   aux 0 [] grid
 ;;
 
-let calc_diffs = List.fold_left ~init:[] ~f:(fun acc (a, b) -> acc @ [ a - b ])
+let read_char ch =
+  match ch with
+  | 'O' -> Some Rounded
+  | '#' -> Some Solid
+  | _ -> None
+;;
 
 let _ =
   let lines = Advent.Strings.read_lines "./inputs/day14.txt" in
   let width = List.nth_exn lines 0 |> String.length in
-  let points = read_lines (List.length lines) lines in
+  let points = Advent.Strings.read_chars_as_grid lines ~f:read_char in
   let grid = { width; height = List.length lines; points = IntTupleMap.of_list points } in
   (* TODO: hardcoded cycle start number, dynamically find this *)
-  let _ = Printf.printf "Part one: %d\n" (roll_north grid |> sum_load) in
+  let _ = Printf.printf "Part one: %d\n" (roll North grid |> sum_load) in
   (* Part two *)
   let cycles, g = find_cycle grid 102837 in
-  let freqs = calc_diffs (Advent.Lists.paired cycles) in
+  let freqs = Advent.Lists.elt_diffs (List.rev cycles) in
   let cycle_frequency =
     let fst = List.hd_exn freqs in
     if List.for_all ~f:(equal_int fst) freqs

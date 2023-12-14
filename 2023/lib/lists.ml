@@ -30,3 +30,11 @@ let rec combinations k l =
     | x :: xs ->
       List.map ~f:(fun tl -> x :: tl) (combinations (k - 1) xs) @ combinations k xs)
 ;;
+
+(* Returns a list composed of the numerical difference between each adajcent element
+   in the list. e.g. an input of [1,1,1] -> [0,0] where as [1,5;10] -> [4;5;5] *)
+let elt_diffs list =
+  List.fold_left ~init:[] ~f:(fun acc (a, b) -> acc @ [ b - a ]) (paired list)
+;;
+
+let elt_sum = List.reduce_exn ~f:(fun x y -> x + y)
