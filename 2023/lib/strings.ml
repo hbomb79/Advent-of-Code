@@ -20,3 +20,4 @@ let read_lines file =
 ;;
 
 let string_tail str n = String.sub str ~pos:n ~len:(String.length str - n)
+let make_from_ints ints = (List.map ~f:string_of_int) ints |> String.concat ~sep:", "
