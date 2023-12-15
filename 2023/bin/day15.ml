@@ -53,24 +53,26 @@ let rec apply_instructions boxes instructions =
     apply_instructions applied xs
 ;;
 
+let box_focal_power box_num lenses =
+  List.foldi
+    ~init:0
+    ~f:(fun sloti acc (_, focal) -> acc + ((box_num + 1) * (sloti + 1) * focal))
+    lenses
+;;
+
 let () =
-  let lines = Advent.Strings.read_lines "./inputs/day15.txt" in
-  let parts = List.nth_exn lines 0 |> String.split ~on:',' |> List.map ~f:hash_str in
-  let h = List.reduce_exn ~f:( + ) parts in
-  let _ = Printf.printf "Part one: %d\n" h in
-  let instructions =
-    List.nth_exn lines 0 |> String.split ~on:',' |> List.map ~f:Instruction.read
+  let sections =
+    Advent.Strings.read_lines "./inputs/day15.txt" |> List.hd_exn |> String.split ~on:','
   in
-  let boxes = List.init 256 ~f:(fun _ -> []) in
-  let applied = apply_instructions boxes instructions in
-  let box_power =
-    List.mapi applied ~f:(fun box_idx lenses ->
-      List.mapi
-        ~f:(fun slot_idx (_, focal) -> (box_idx + 1) * (slot_idx + 1) * focal)
-        lenses
-      |> Advent.Lists.elt_sum)
-    |> Advent.Lists.elt_sum
+  let _ = Printf.printf "Part one: %d\n" (List.map ~f:hash_str sections |> elt_sum) in
+  let instructions = List.map ~f:Instruction.read sections in
+  let applied = apply_instructions (List.init 256 ~f:(fun _ -> [])) instructions in
+  let bxpw =
+    List.foldi
+      ~init:0
+      ~f:(fun boxi acc lenses -> acc + box_focal_power boxi lenses)
+      applied
   in
-  let _ = Printf.printf "Part two: %d\n" box_power in
+  let _ = Printf.printf "Part two: %d\n" bxpw in
   ()
 ;;
