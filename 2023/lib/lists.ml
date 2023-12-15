@@ -38,3 +38,8 @@ let elt_diffs list =
 ;;
 
 let elt_sum = List.reduce_exn ~f:(fun x y -> x + y)
+
+let all_same ~compare list =
+  let fst = List.hd_exn list in
+  if List.for_all ~f:(compare fst) list then Some fst else None
+;;
