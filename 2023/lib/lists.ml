@@ -37,9 +37,19 @@ let elt_diffs list =
   List.fold_left ~init:[] ~f:(fun acc (a, b) -> acc @ [ b - a ]) (paired list)
 ;;
 
-let elt_sum = List.reduce_exn ~f:(fun x y -> x + y)
+let elt_sum l =
+  match List.reduce ~f:(fun x y -> x + y) l with
+  | Some i -> i
+  | None -> 0
+;;
 
 let all_same ~compare list =
   let fst = List.hd_exn list in
   if List.for_all ~f:(compare fst) list then Some fst else None
+;;
+
+let replace list idx v = List.mapi list ~f:(fun li l -> if equal_int li idx then v else l)
+
+let replace_map list idx ~f =
+  List.mapi list ~f:(fun li l -> if equal_int li idx then f li l else l)
 ;;
