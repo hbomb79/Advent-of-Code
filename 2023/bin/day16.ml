@@ -23,6 +23,18 @@ end
 
 module TilePos = struct
   type t = (int * int) * Direction.t [@@deriving compare]
+
+  let rotate_anticlockwise (tile, dir) =
+    let new_direction = Direction.rotate_anticlockwise dir in
+    Point.shift_towards tile new_direction, new_direction
+  ;;
+
+  let rotate_clockwise (tile, dir) =
+    let new_direction = Direction.rotate_clockwise dir in
+    Point.shift_towards tile new_direction, new_direction
+  ;;
+
+  let continue_forward (tile, dir) = Point.shift_towards tile dir, dir
 end
 
 module TileSet = CCSet.Make (TilePos)
@@ -39,24 +51,16 @@ let sim_rays grid start =
       |> IntTupleSet.to_list
     | ((ray, direction) as cray) :: rs ->
       let new_energized = TileSet.add (ray, direction) energized in
-      let continue () =
-        let new_ray = Point.shift_towards ray direction, direction in
-        aux new_energized (new_ray :: rs)
-      in
-      (match Grid.point_at_xy grid ray with
+      let continue () = aux new_energized (TilePos.continue_forward cray :: rs) in
+      (match ArrayGrid.point_at_xy grid ray with
        | None -> aux energized rs
        | Some _ when TileSet.mem cray energized -> aux energized rs
        | Some Empty -> continue ()
        | Some HorizontalSplitter when Direction.is_horizontal direction -> continue ()
        | Some VerticalSplitter when Direction.is_vertical direction -> continue ()
        | Some AntiClockwiseMirror ->
-         let new_direction = Direction.rotate_anticlockwise direction in
-         let new_ray = Point.shift_towards ray new_direction, new_direction in
-         aux new_energized (new_ray :: rs)
-       | Some ClockwiseMirror ->
-         let new_direction = Direction.rotate_clockwise direction in
-         let new_ray = Point.shift_towards ray new_direction, new_direction in
-         aux new_energized (new_ray :: rs)
+         aux new_energized (TilePos.rotate_anticlockwise cray :: rs)
+       | Some ClockwiseMirror -> aux new_energized (TilePos.rotate_clockwise cray :: rs)
        | Some HorizontalSplitter ->
          let new_rays =
            (Point.shift_towards ray East, East)
@@ -75,33 +79,40 @@ let sim_rays grid start =
   aux (TileSet.of_list []) [ start ]
 ;;
 
-let find_max_energized grid =
-  let grid_right = Grid.width grid - 1 in
-  let grid_bottom = Grid.height grid - 1 in
+let grid_edge grid =
+  let grid_right = ArrayGrid.width grid - 1 in
+  let grid_bottom = ArrayGrid.height grid - 1 in
+  let corners =
+    [ (0, 0), South (*top left*)
+    ; (0, 0), East
+    ; (grid_right, 0), West (*top right*)
+    ; (grid_right, 0), South
+    ; (0, grid_bottom), North (*bottom left*)
+    ; (0, grid_bottom), East
+    ; (grid_right, grid_bottom), West (*bottom right*)
+    ; (grid_right, grid_bottom), North
+    ]
+  in
   let hor =
-    List.init (Grid.width grid) ~f:(fun x ->
-      match x with
-      | 0 ->
-        [ (0, 0), East; (0, 0), South; (0, grid_bottom), North; (0, grid_bottom), East ]
-      | n when n = grid_right ->
-        [ (grid_right, 0), West
-        ; (grid_right, 0), South
-        ; (grid_right, grid_bottom), West
-        ; (grid_right, grid_bottom), North
-        ]
-      | _ -> [ (x, 0), South; (x, 0), North ])
+    List.init
+      (ArrayGrid.width grid - 2)
+      ~f:(fun x -> [ (x + 1, 0), South; (x + 1, grid_bottom), North ])
   in
   let vert =
     List.init
-      (Grid.height grid - 2)
+      (ArrayGrid.height grid - 2)
       ~f:(fun y -> [ (0, y + 1), East; (grid_right, y + 1), West ])
   in
+  corners @ Stdlib.List.flatten (hor @ vert)
+;;
+
+let find_max_energized grid =
   let percentage_done d total =
     int_of_float (float_of_int d /. float_of_int total *. 100.)
   in
-  let all = Stdlib.List.flatten (hor @ vert) in
-  let total = List.length all in
-  List.mapi all ~f:(fun i s ->
+  let edge = grid_edge grid in
+  let total = List.length edge in
+  List.mapi edge ~f:(fun i s ->
     let _ =
       Printf.printf
         "\r%d%% Complete [%d of %d]...%!"
@@ -114,7 +125,7 @@ let find_max_energized grid =
 
 let _ =
   let lines = Advent.Strings.read_lines "./inputs/day16.txt" in
-  let g = Grid.from_lines ~f:Tile.read lines in
+  let g = ArrayGrid.from_lines ~f:Tile.read lines in
   let energized = sim_rays g ((0, 0), East) in
   let _ = Printf.printf "Part One: %d\n" (List.length energized) in
   let max =

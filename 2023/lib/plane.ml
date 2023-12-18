@@ -70,15 +70,18 @@ module ArrayGrid = struct
     }
 
   let point_at_xy grid (x, y) =
-    let idx = (y * grid.width) + x in
-    grid.points.(idx)
+    if x < 0 || y < 0 || x >= grid.width || y >= grid.height
+    then None
+    else (
+      let idx = (y * grid.width) + x in
+      Some grid.points.(idx))
   ;;
 
   let point_at_idx grid idx = grid.points.(idx)
   let copy grid = { grid with points = Array.copy grid.points }
   let from_points points = List.map ~f:(fun (_, v) -> v) points
 
-  let swap_points grid (x1, y1) (x2, y2) =
+  let swap_points_mut grid (x1, y1) (x2, y2) =
     let idx1 = (y1 * grid.width) + x1 in
     let idx2 = (y2 * grid.width) + x2 in
     let p1 = grid.points.(idx1) in
@@ -88,10 +91,17 @@ module ArrayGrid = struct
     ()
   ;;
 
+  let swap_points grid a b =
+    swap_points_mut { grid with points = Array.copy grid.points } a b
+  ;;
+
   let from_lines ~f lines =
     let points = Strings.read_chars_as_grid lines ~f |> from_points |> Array.of_list in
     { width = List.nth_exn lines 0 |> String.length; height = List.length lines; points }
   ;;
+
+  let width grid = grid.width
+  let height grid = grid.height
 end
 
 module Grid = struct

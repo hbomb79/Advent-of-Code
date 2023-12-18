@@ -46,10 +46,10 @@ let roll direction grid =
     | Some p, _ -> aux p p
     | _ ->
       (match ArrayGrid.point_at_xy grid point with
-       | Rolling ->
-         let _ = ArrayGrid.swap_points grid point limit in
+       | Some Rolling ->
+         let _ = ArrayGrid.swap_points_mut grid point limit in
          aux (Point.shift_away point direction) (Point.shift_away limit direction)
-       | Cube ->
+       | Some Cube ->
          let next = Point.shift_away point direction in
          aux next next
        | _ -> aux (Point.shift_away point direction) limit)
