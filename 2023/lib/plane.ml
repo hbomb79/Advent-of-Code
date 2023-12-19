@@ -44,6 +44,14 @@ module Direction = struct
     | East -> South
     | West -> North
   ;;
+
+  let get_delta dir =
+    match dir with
+    | North -> 0, -1
+    | South -> 0, 1
+    | East -> 1, 0
+    | West -> -1, 0
+  ;;
 end
 
 module Point = struct
