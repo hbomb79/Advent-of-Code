@@ -7,7 +7,7 @@ module Direction = struct
     | West
     | South
     | East
-  [@@deriving show, compare]
+  [@@deriving show, compare, equal]
 
   let opposite d =
     match d with
@@ -49,7 +49,7 @@ end
 module Point = struct
   open Direction
 
-  type t = int * int
+  type t = int * int [@@deriving compare, equal]
 
   let shift_towards (x, y) direction =
     match direction with
@@ -77,6 +77,7 @@ module ArrayGrid = struct
       Some grid.points.(idx))
   ;;
 
+  let point_inside grid (x, y) = x >= 0 && x < grid.width && y >= 0 && y < grid.height
   let point_at_idx grid idx = grid.points.(idx)
   let copy grid = { grid with points = Array.copy grid.points }
   let from_points points = List.map ~f:(fun (_, v) -> v) points
