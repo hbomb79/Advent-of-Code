@@ -48,3 +48,31 @@ let process_ranges input_range source_range dest_range =
 ;;
 
 let value range = range.stop - range.start
+let zero = { start = 0; stop = 0 }
+
+(* Given a range and a n value, returns back the part of the range which DID fall within this range, and the part that didn't.
+
+   NB: Zero value ranges are the expected output of this function if the range doesn't contain the value given
+*)
+let range_gt n range =
+  if range.stop <= n
+  then (* This range does not contain 'n' at all *)
+    zero, range
+  else if range.start <= n
+  then (* Split the range *)
+    { range with start = n + 1 }, { range with stop = n + 1 }
+  else (* Entire range sits ahead of 'n' *)
+    range, zero
+;;
+
+(* Same as range_gt, but swapped around for where the range is < n *)
+let range_lt n range =
+  if range.stop < n
+  then (* Entire range sits before 'n' *)
+    range, zero
+  else if range.start < n
+  then (* Split the range *)
+    { range with stop = n }, { range with start = n }
+  else (* Entire range sits ahead of 'n' *)
+    zero, range
+;;
