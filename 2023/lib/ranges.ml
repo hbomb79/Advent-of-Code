@@ -46,3 +46,5 @@ let process_ranges input_range source_range dest_range =
       ; { input_range with start = source_range.stop + 1 }
       ]
 ;;
+
+let value range = range.stop - range.start
