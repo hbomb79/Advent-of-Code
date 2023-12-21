@@ -57,7 +57,7 @@ end
 module Point = struct
   open Direction
 
-  type t = int * int [@@deriving compare, equal]
+  type t = int * int [@@deriving compare, equal, show]
 
   let shift_towards (x, y) direction =
     match direction with
@@ -68,6 +68,11 @@ module Point = struct
   ;;
 
   let shift_away (x, y) direction = shift_towards (x, y) (Direction.opposite direction)
+
+  let neighbors point =
+    List.fold_left [ North; South; East; West ] ~init:[] ~f:(fun acc dir ->
+      shift_towards point dir :: acc)
+  ;;
 end
 
 module ArrayGrid = struct
@@ -78,11 +83,14 @@ module ArrayGrid = struct
     }
 
   let point_at_xy grid (x, y) =
-    if x < 0 || y < 0 || x >= grid.width || y >= grid.height
-    then None
-    else (
-      let idx = (y * grid.width) + x in
-      Some grid.points.(idx))
+    let _ =
+      if x < 0 || y < 0 || x > grid.width || y > grid.height
+      then failwith (Printf.sprintf "%d,%d out of bounds" x y)
+    in
+    (* then None *)
+    (* else ( *)
+    let idx = (y * grid.width) + x in
+    Some grid.points.(idx)
   ;;
 
   let point_inside grid (x, y) = x >= 0 && x < grid.width && y >= 0 && y < grid.height
@@ -111,6 +119,13 @@ module ArrayGrid = struct
 
   let width grid = grid.width
   let height grid = grid.height
+
+  let find_point grid ~(f : int * int * 'a -> bool) =
+    Array.find_mapi grid.points ~f:(fun idx point ->
+      let x = idx / grid.width in
+      let y = idx % grid.width in
+      Option.some_if (f (x, y, point)) (x, y, point))
+  ;;
 end
 
 module Grid = struct
