@@ -83,14 +83,11 @@ module ArrayGrid = struct
     }
 
   let point_at_xy grid (x, y) =
-    let _ =
-      if x < 0 || y < 0 || x > grid.width || y > grid.height
-      then failwith (Printf.sprintf "%d,%d out of bounds" x y)
-    in
-    (* then None *)
-    (* else ( *)
-    let idx = (y * grid.width) + x in
-    Some grid.points.(idx)
+    if x < 0 || y < 0 || x >= grid.width || y >= grid.height
+    then None
+    else (
+      let idx = (y * grid.width) + x in
+      Some grid.points.(idx))
   ;;
 
   let point_inside grid (x, y) = x >= 0 && x < grid.width && y >= 0 && y < grid.height
