@@ -2,4 +2,4 @@
  (name advent)
  (preprocess (pps ppx_deriving.show ppx_deriving.ord ppx_variants_conv ppx_compare ppx_hash ppx_sexp_conv))
  (libraries core str containers unix)
- (modules ranges iter strings ranges searcher lists math intTuple memo plane pathfinding))
+ (modules ranges iter strings ranges searcher lists math intTuple memo plane pathfinding boundingBox))
