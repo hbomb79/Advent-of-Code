@@ -84,5 +84,91 @@ let _ =
       perms
   in
   let _ = Printf.printf "Part One: %d\n" count in
-  ()
+  (* For part two we'll use Z3, which is a theorem solver which will massively simplify
+     this task... Hopefully.
+
+     https://github.com/Z3prover/z3
+  *)
+  let mk_fresh_int_var ctx name =
+    Z3.Expr.mk_const_s ctx name (Z3.Arithmetic.Integer.mk_sort ctx)
+  in
+  let ctx = Z3.mk_context [] in
+  let x = mk_fresh_int_var ctx "x" in
+  let y = mk_fresh_int_var ctx "y" in
+  let z = mk_fresh_int_var ctx "z" in
+  let vx = mk_fresh_int_var ctx "vx" in
+  let vy = mk_fresh_int_var ctx "vy" in
+  let vz = mk_fresh_int_var ctx "vz" in
+  let solver = Z3.Solver.mk_solver ctx None in
+  List.iteri
+    ~f:(fun i a ->
+      let (ax, ay, az), (vax, vay, vaz) = a in
+      let t = mk_fresh_int_var ctx (Printf.sprintf "t_%d" i) in
+      Z3.Solver.add
+        solver
+        [ Z3.Arithmetic.mk_ge ctx t (Z3.Arithmetic.Integer.mk_const_s ctx "0") ];
+      Z3.Solver.add
+        solver
+        [ Z3.Boolean.mk_eq
+            ctx
+            (Z3.Arithmetic.mk_add ctx [ x; Z3.Arithmetic.mk_mul ctx [ vx; t ] ])
+            (Z3.Arithmetic.mk_add
+               ctx
+               [ Z3.Arithmetic.Integer.mk_numeral_i ctx (int_of_float ax)
+               ; Z3.Arithmetic.mk_mul
+                   ctx
+                   (* I have no idea why only this one condition can be a const int, where as the others need to be numerals... *)
+                   [ Z3.Arithmetic.Integer.mk_const_s
+                       ctx
+                       (vax |> int_of_float |> string_of_int)
+                   ; t
+                   ]
+               ])
+        ];
+      Z3.Solver.add
+        solver
+        [ Z3.Boolean.mk_eq
+            ctx
+            (Z3.Arithmetic.mk_add ctx [ y; Z3.Arithmetic.mk_mul ctx [ vy; t ] ])
+            (Z3.Arithmetic.mk_add
+               ctx
+               [ Z3.Arithmetic.Integer.mk_numeral_i ctx (int_of_float ay)
+               ; Z3.Arithmetic.mk_mul
+                   ctx
+                   [ Z3.Arithmetic.Integer.mk_numeral_i ctx (vay |> int_of_float); t ]
+               ])
+        ];
+      Z3.Solver.add
+        solver
+        [ Z3.Boolean.mk_eq
+            ctx
+            (Z3.Arithmetic.mk_add ctx [ z; Z3.Arithmetic.mk_mul ctx [ vz; t ] ])
+            (Z3.Arithmetic.mk_add
+               ctx
+               [ Z3.Arithmetic.Integer.mk_numeral_i ctx (int_of_float az)
+               ; Z3.Arithmetic.mk_mul
+                   ctx
+                   [ Z3.Arithmetic.Integer.mk_numeral_i ctx (int_of_float vaz); t ]
+               ])
+        ])
+    hailstones;
+  match Z3.Solver.check solver [] with
+  | Z3.Solver.UNSATISFIABLE -> failwith "not satisfiable"
+  | Z3.Solver.UNKNOWN -> failwith "unknown"
+  | Z3.Solver.SATISFIABLE ->
+    let model = Z3.Solver.get_model solver |> Option.value_exn in
+    let get_int_value (var : Z3.Expr.expr) : int =
+      Z3.Expr.to_string (Z3.Model.eval model var true |> Option.value_exn)
+      |> int_of_string
+    in
+    let x_value = get_int_value x in
+    let y_value = get_int_value y in
+    let z_value = get_int_value z in
+    Printf.printf
+      "Part two: %d [x = %d, y = %d, z = %d]\n"
+      (x_value + y_value + z_value)
+      x_value
+      y_value
+      z_value
 ;;
+(* Z3.del_context ctx () *)
