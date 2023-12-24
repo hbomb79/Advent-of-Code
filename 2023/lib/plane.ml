@@ -69,9 +69,9 @@ module Point = struct
 
   let shift_away (x, y) direction = shift_towards (x, y) (Direction.opposite direction)
 
-  let neighbors point =
-    List.fold_left [ North; South; East; West ] ~init:[] ~f:(fun acc dir ->
-      shift_towards point dir :: acc)
+  let neighbors ?dirs point =
+    let d = Option.value dirs ~default:[ North; South; East; West ] in
+    List.fold_left d ~init:[] ~f:(fun acc dir -> shift_towards point dir :: acc)
   ;;
 end
 
