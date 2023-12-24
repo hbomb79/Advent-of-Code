@@ -1,7 +1,7 @@
 open Core
 
 let extract_numbers str =
-  let number_regex = Str.regexp "\\b\\([0-9]+\\)\\b" in
+  let number_regex = Str.regexp "\\(\\-?[0-9]+\\)" in
   let rec aux acc start_pos =
     try
       let _ = Str.search_forward number_regex str start_pos in
