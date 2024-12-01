@@ -1,21 +1,15 @@
 # Aoc2024
 
-**TODO: Add description**
+Advent of Code solutions for 2024, written in Elixir.
 
-## Installation
+To run, ensure you have Elixir installed; this should see you have Elixir _and_ its build system 'Mix' installed.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `aoc2024` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:aoc2024, "~> 0.1.0"}
-  ]
-end
+**Usage:**
+```
+mix solve --day 01
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/aoc2024>.
+**Options:**
+* `--part | -p`: Optionally specify the part to solve (as an integer, 1 or 2). If not specified, solves both parts
+* `--test | -t`: Optionally solve the puzzle using the example input rather than the full input
 
