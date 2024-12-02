@@ -16,8 +16,7 @@ defmodule Puzzles.Day01 do
   # each entry to numbers and returning as the left/right lists.
   defp parseInput(input) do
     rows =
-      String.split(input, "\n")
-      |> Enum.filter(fn row -> String.length(row) > 0 end)
+      Input.parse_lines(input)
       |> Enum.map(fn row -> String.split(row, "   ") |> Enum.map(&String.to_integer/1) end)
 
     {

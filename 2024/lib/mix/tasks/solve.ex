@@ -6,7 +6,8 @@ defmodule Mix.Tasks.Solve do
     Aoc2024.run_puzzle(
       args,
       Map.new([
-        {"day01", Puzzles.Day01}
+        {"day01", Puzzles.Day01},
+        {"day02", Puzzles.Day02}
       ])
     )
   end
