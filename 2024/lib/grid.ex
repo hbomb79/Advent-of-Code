@@ -22,9 +22,25 @@ defmodule Grid do
     %__MODULE__{data: data, width: 1 + dims[:x2] - dims[:x1], height: 1 + dims[:y2] - dims[:y1]}
   end
 
-  @spec at_coord!(Grid.t(), coordinate()) :: any()
-  def at_coord!(grid, {x, y}) do
-    Map.fetch!(grid[:data], {x, y})
+  @spec new_from_lines([String.t()]) :: t()
+  def new_from_lines(lines) do
+    Enum.with_index(lines)
+    |> List.foldr([], fn {line, y}, acc ->
+      String.graphemes(line)
+      |> Enum.with_index()
+      |> List.foldr(acc, fn {data, x}, acc -> [[{:x, x}, {:y, y}, {:data, data}] | acc] end)
+    end)
+    |> new
+  end
+
+  @spec new_from_string(String.t()) :: t()
+  def new_from_string(string) do
+    Input.parse_lines(string) |> new_from_lines()
+  end
+
+  @spec point!(Grid.t(), coordinate()) :: any()
+  def point!(grid, {x, y}) do
+    Map.fetch!(grid.data, {x, y})
   end
 
   @spec shift(Grid.t(), :down | :left | :right | :up, coordinate()) ::
@@ -38,7 +54,7 @@ defmodule Grid do
   end
 
   def shift(grid, :right, {x, y}) do
-    if x + 1 >= grid[:width] do
+    if x + 1 >= grid.width do
       {:error, :out_of_bounds}
     else
       {:ok, {x + 1, y}}
@@ -54,7 +70,7 @@ defmodule Grid do
   end
 
   def shift(grid, :down, {x, y}) do
-    if y + 1 >= grid[:height] do
+    if y + 1 >= grid.height do
       {:error, :out_of_bounds}
     else
       {:ok, {x, y + 1}}
@@ -73,7 +89,7 @@ defmodule Grid do
   def find_next!(grid, dir, coordinate) do
     p = shift!(grid, dir, coordinate)
 
-    case Map.fetch(grid[:data], p) do
+    case Map.fetch(grid.data, p) do
       {:ok, cell} -> {p, cell}
       _ -> find_next!(grid, dir, p)
     end

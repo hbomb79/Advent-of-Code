@@ -12,9 +12,9 @@ defmodule GridTest do
         [{:x, 2}, {:y, 1}, {:data, "3"}]
       ])
 
-    assert map_size(grid[:data]) == 6
-    assert grid[:width] == 3
-    assert grid[:height] == 2
+    assert map_size(grid.data) == 6
+    assert grid.width == 3
+    assert grid.height == 2
 
     grid =
       Grid.new([
@@ -26,12 +26,27 @@ defmodule GridTest do
         [{:x, 7}, {:y, 3}, {:data, "3"}]
       ])
 
-    assert map_size(grid[:data]) == 6
-    assert grid[:width] == 8
-    assert grid[:height] == 4
+    assert map_size(grid.data) == 6
+    assert grid.width == 8
+    assert grid.height == 4
   end
 
-  test "Grid.at_coord!" do
+  test "Grid.new_from_string" do
+    grid = Grid.new_from_string("ABCD\n1234\nXOXO\n")
+    assert grid.width == 4
+    assert grid.height == 3
+
+    assert Grid.new_from_lines(["ABCD", "1234", "XOXO"]) == grid
+
+    # top left
+    assert Grid.point!(grid, {0, 0}) == "A"
+    # mid
+    assert Grid.point!(grid, {3, 1}) == "4"
+    # bot right
+    assert Grid.point!(grid, {3, 2}) == "O"
+  end
+
+  test "Grid.point!" do
     grid =
       Grid.new([
         [{:x, 0}, {:y, 0}, {:data, "A"}],
@@ -42,11 +57,11 @@ defmodule GridTest do
         [{:x, 7}, {:y, 3}, {:data, "3"}]
       ])
 
-    assert map_size(grid[:data]) == 6
-    assert grid[:width] == 8
-    assert grid[:height] == 4
+    assert map_size(grid.data) == 6
+    assert grid.width == 8
+    assert grid.height == 4
 
-    assert Grid.at_coord!(grid, {2, 0}) == "C"
+    assert Grid.point!(grid, {2, 0}) == "C"
   end
 
   test "Grid.shift" do
@@ -60,9 +75,9 @@ defmodule GridTest do
         [{:x, 7}, {:y, 3}, {:data, "3"}]
       ])
 
-    assert map_size(grid[:data]) == 6
-    assert grid[:width] == 8
-    assert grid[:height] == 4
+    assert map_size(grid.data) == 6
+    assert grid.width == 8
+    assert grid.height == 4
 
     # Happy cases
 
@@ -103,9 +118,9 @@ defmodule GridTest do
         [{:x, 7}, {:y, 12}, {:data, "3"}]
       ])
 
-    assert map_size(grid[:data]) == 6
-    assert grid[:width] == 8
-    assert grid[:height] == 13
+    assert map_size(grid.data) == 6
+    assert grid.width == 8
+    assert grid.height == 13
 
     assert Grid.find_next!(grid, :down, {5, 0}) == {{5, 10}, "1"}
     assert Grid.find_next!(grid, :up, {5, 10}) == {{5, 0}, "C"}

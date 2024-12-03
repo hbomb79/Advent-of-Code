@@ -1,5 +1,6 @@
 defmodule Input do
+  @spec parse_lines(String.t()) :: [String.t()]
   def parse_lines(input) do
-    String.split(input, "\n") |> Enum.filter(&(String.length(&1) > 0))
+    String.split(input, "\n", trim: true)
   end
 end
