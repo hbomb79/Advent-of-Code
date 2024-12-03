@@ -8,8 +8,8 @@ defmodule Puzzles.Day03 do
     |> Regex.scan(input)
     |> List.foldl({0, true}, fn
       ["do"], {acc, _} -> {acc, true}
-      ["don't"], {acc, _} when expanded -> {acc, false}
       ["don't"], {acc, _} when not expanded -> {acc, true}
+      ["don't"], {acc, _} when expanded -> {acc, false}
       _, {acc, false} -> {acc, false}
       [_, x, y], {acc, true} -> {acc + String.to_integer(x) * String.to_integer(y), true}
     end)
