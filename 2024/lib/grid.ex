@@ -19,13 +19,16 @@ defmodule Grid do
         }
       end)
 
-    %{data: data, width: 1 + dims[:x2] - dims[:x1], height: 1 + dims[:y2] - dims[:y1]}
+    %__MODULE__{data: data, width: 1 + dims[:x2] - dims[:x1], height: 1 + dims[:y2] - dims[:y1]}
   end
 
+  @spec at_coord!(Grid.t(), coordinate()) :: any()
   def at_coord!(grid, {x, y}) do
     Map.fetch!(grid[:data], {x, y})
   end
 
+  @spec shift(Grid.t(), :down | :left | :right | :up, coordinate()) ::
+          {:error, :out_of_bounds} | {:ok, coordinate()}
   def shift(_, :left, {x, y}) do
     if x - 1 < 0 do
       {:error, :out_of_bounds}
@@ -58,6 +61,7 @@ defmodule Grid do
     end
   end
 
+  @spec shift!(Grid.t(), :down | :left | :right | :up, coordinate()) :: coordinate()
   def shift!(grid, dir, coordinate) do
     case shift(grid, dir, coordinate) do
       {:ok, val} -> val
@@ -65,6 +69,7 @@ defmodule Grid do
     end
   end
 
+  @spec find_next!(Grid.t(), :down | :left | :right | :up, coordinate()) :: {coordinate(), any()}
   def find_next!(grid, dir, coordinate) do
     p = shift!(grid, dir, coordinate)
 
