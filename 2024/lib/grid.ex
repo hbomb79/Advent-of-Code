@@ -38,12 +38,47 @@ defmodule Grid do
     Input.parse_lines(string) |> new_from_lines()
   end
 
-  @spec point!(Grid.t(), coordinate()) :: any()
+  @spec point(t(), coordinate()) :: :error | {:ok, any()}
+  def point(grid, {x, y}) do
+    Map.fetch(grid.data, {x, y})
+  end
+
+  @spec point!(t(), coordinate()) :: any()
   def point!(grid, {x, y}) do
     Map.fetch!(grid.data, {x, y})
   end
 
-  @spec shift(Grid.t(), :down | :left | :right | :up, coordinate()) ::
+  @doc """
+  Returns all neighbouring points from the point provided. Any directions that
+  are out-of-bounds will be omitted. Neighbours are only returned for adjacent cells
+  of the grid (i.e. +/- 1)
+  """
+  @spec neighbours(t(), coordinate()) :: [coordinate()]
+  def neighbours(grid, point) do
+    [
+      shift(grid, :up, point),
+      shift(grid, :down, point),
+      shift(grid, :left, point),
+      shift(grid, :right, point)
+    ]
+    |> List.foldl([], fn
+      {:error, _}, acc -> acc
+      {:ok, point}, acc -> [point | acc]
+    end)
+  end
+
+  @spec filter_data(t(), [any()]) :: t()
+  def filter_data(grid, allowed_data),
+    do: filter_fn(grid, fn {_, data} -> data in allowed_data end)
+
+  @spec filter_fn(any(), (any() -> boolean())) :: t()
+  def filter_fn(grid, predicate) do
+    Enum.filter(grid.data, predicate)
+    |> Enum.map(fn {{x, y}, data} -> [{:x, x}, {:y, y}, {:data, data}] end)
+    |> new
+  end
+
+  @spec shift(t(), :down | :left | :right | :up, coordinate()) ::
           {:error, :out_of_bounds} | {:ok, coordinate()}
   def shift(_, :left, {x, y}) do
     if x - 1 < 0 do
@@ -77,7 +112,7 @@ defmodule Grid do
     end
   end
 
-  @spec shift!(Grid.t(), :down | :left | :right | :up, coordinate()) :: coordinate()
+  @spec shift!(t(), :down | :left | :right | :up, coordinate()) :: coordinate()
   def shift!(grid, dir, coordinate) do
     case shift(grid, dir, coordinate) do
       {:ok, val} -> val
@@ -85,7 +120,7 @@ defmodule Grid do
     end
   end
 
-  @spec find_next!(Grid.t(), :down | :left | :right | :up, coordinate()) :: {coordinate(), any()}
+  @spec find_next!(t(), :down | :left | :right | :up, coordinate()) :: {coordinate(), any()}
   def find_next!(grid, dir, coordinate) do
     p = shift!(grid, dir, coordinate)
 

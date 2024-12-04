@@ -129,4 +129,22 @@ defmodule GridTest do
 
     assert_raise RuntimeError, "out_of_bounds", fn -> Grid.find_next!(grid, :right, {5, 0}) end
   end
+
+  test "Grid.neighbours" do
+    grid = Grid.new_from_string("ABCD\n1234\nXOXO")
+    assert Grid.neighbours(grid, {1, 1}) -- [{0, 1}, {1, 0}, {1, 2}, {2, 1}] == []
+    assert Grid.neighbours(grid, {0, 0}) -- [{0, 1}, {1, 0}] == []
+    assert Grid.neighbours(grid, {3, 2}) -- [{2, 2}, {3, 1}] == []
+  end
+
+  test "Grid.filter" do
+    grid = Grid.new_from_string("ABCD\n1234\nXOXO")
+    grid2 = Grid.filter_data(grid, ["A", "B", "C", "D", "X", "O"])
+
+    assert grid != grid2
+    assert grid2.width == 4
+    assert grid2.height == 3
+    assert Grid.point!(grid2, {1, 0}) == "B"
+    assert Grid.point!(grid2, {1, 2}) == "O"
+  end
 end
