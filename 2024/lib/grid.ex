@@ -67,23 +67,6 @@ defmodule Grid do
     end)
   end
 
-  defp dir_to_delta(dir) do
-    case dir do
-      :up -> {0, -1}
-      :down -> {0, 1}
-      :left -> {-1, 0}
-      :right -> {1, 0}
-      :up_left -> {-1, -1}
-      :up_right -> {1, -1}
-      :down_left -> {-1, 1}
-      :down_right -> {1, 1}
-    end
-  end
-
-  defp is_oob(grid, {x, y}) do
-    x < 0 || x >= grid.width || y < 0 || y >= grid.height
-  end
-
   @doc """
   Given a point in the provided grid, this function travels outwardly in the direction
   provided for the number of points specified by dist. The points will be returned in same order
@@ -121,38 +104,15 @@ defmodule Grid do
     |> new
   end
 
-  @spec shift(t(), :down | :left | :right | :up, coordinate()) ::
-          {:error, :out_of_bounds} | {:ok, coordinate()}
-  def shift(_, :left, {x, y}) do
-    if x - 1 < 0 do
-      {:error, :out_of_bounds}
-    else
-      {:ok, {x - 1, y}}
-    end
-  end
-
-  def shift(grid, :right, {x, y}) do
-    if x + 1 >= grid.width do
-      {:error, :out_of_bounds}
-    else
-      {:ok, {x + 1, y}}
-    end
-  end
-
-  def shift(_, :up, {x, y}) do
-    if y - 1 < 0 do
-      {:error, :out_of_bounds}
-    else
-      {:ok, {x, y - 1}}
-    end
-  end
-
-  def shift(grid, :down, {x, y}) do
-    if y + 1 >= grid.height do
-      {:error, :out_of_bounds}
-    else
-      {:ok, {x, y + 1}}
-    end
+  @spec shift(
+          t(),
+          :down | :down_left | :down_right | :left | :right | :up | :up_left | :up_right,
+          coordinate()
+        ) :: {:error, :out_of_bounds} | {:ok, {number(), number()}}
+  def shift(grid, dir, {x, y}) do
+    {dx, dy} = dir_to_delta(dir)
+    point = {x + dx, y + dy}
+    if is_oob(grid, point), do: {:error, :out_of_bounds}, else: {:ok, point}
   end
 
   @spec shift!(t(), :down | :left | :right | :up, coordinate()) :: coordinate()
@@ -171,5 +131,22 @@ defmodule Grid do
       {:ok, cell} -> {p, cell}
       _ -> find_next!(grid, dir, p)
     end
+  end
+
+  defp dir_to_delta(dir) do
+    case dir do
+      :up -> {0, -1}
+      :down -> {0, 1}
+      :left -> {-1, 0}
+      :right -> {1, 0}
+      :up_left -> {-1, -1}
+      :up_right -> {1, -1}
+      :down_left -> {-1, 1}
+      :down_right -> {1, 1}
+    end
+  end
+
+  defp is_oob(grid, {x, y}) do
+    x < 0 || x >= grid.width || y < 0 || y >= grid.height
   end
 end
