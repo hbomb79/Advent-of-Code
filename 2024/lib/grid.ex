@@ -67,6 +67,49 @@ defmodule Grid do
     end)
   end
 
+  defp dir_to_delta(dir) do
+    case dir do
+      :up -> {0, -1}
+      :down -> {0, 1}
+      :left -> {-1, 0}
+      :right -> {1, 0}
+      :up_left -> {-1, -1}
+      :up_right -> {1, -1}
+      :down_left -> {-1, 1}
+      :down_right -> {1, 1}
+    end
+  end
+
+  defp is_oob(grid, {x, y}) do
+    x < 0 || x >= grid.width || y < 0 || y >= grid.height
+  end
+
+  @doc """
+  Given a point in the provided grid, this function travels outwardly in the direction
+  provided for the number of points specified by dist. The points will be returned in same order
+  they are encountered.
+
+  Any points encountered which fall out of range of the grid will be discarded, but no error will be
+  raised.
+
+  The origin point WILL be included in the return value
+  """
+  @spec cast_ray(
+          t(),
+          coordinate(),
+          :down | :down_left | :down_right | :left | :right | :up | :up_left | :up_right,
+          integer()
+        ) :: [coordinate()]
+  def cast_ray(grid, {x, y}, dir, dist) do
+    {dx, dy} = dir_to_delta(dir)
+
+    List.foldl(Enum.to_list(0..dist), [], fn mul, acc ->
+      point = {x + dx * mul, y + dy * mul}
+      if is_oob(grid, point), do: acc, else: [point | acc]
+    end)
+    |> Enum.reverse()
+  end
+
   @spec filter_data(t(), [any()]) :: t()
   def filter_data(grid, allowed_data),
     do: filter_fn(grid, fn {_, data} -> data in allowed_data end)
