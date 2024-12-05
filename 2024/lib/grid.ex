@@ -2,7 +2,7 @@ defmodule Grid do
   @type coordinate() :: {integer(), integer()}
 
   defstruct(data: [], width: 0, height: 0)
-  @type t :: %__MODULE__{data: %{coordinate() => any()}, width: integer(), height: integer()}
+  @type t() :: %__MODULE__{data: %{coordinate() => any()}, width: integer(), height: integer()}
 
   @spec new([[x: integer(), y: integer(), data: any()]]) :: t()
   def new(cells) do
@@ -48,6 +48,22 @@ defmodule Grid do
     Map.fetch!(grid.data, {x, y})
   end
 
+  @spec find_value!(t(), any()) :: {coordinate(), any}
+  def find_value!(grid, data) do
+    case find_value(grid, data) do
+      {:error, err} -> raise Atom.to_string(err)
+      {:ok, d} -> d
+    end
+  end
+
+  @spec find_value(t(), any()) :: {:error, :not_found} | {:ok, {coordinate(), any}}
+  def find_value(grid, data) do
+    case Enum.find(grid.data, fn {_, d} -> d == data end) do
+      nil -> {:error, :not_found}
+      d -> {:ok, d}
+    end
+  end
+
   @doc """
   Returns all neighbouring points from the point provided. Any directions that
   are out-of-bounds will be omitted. Neighbours are only returned for adjacent cells
@@ -91,6 +107,43 @@ defmodule Grid do
       if is_oob(grid, point), do: acc, else: [point | acc]
     end)
     |> Enum.reverse()
+  end
+
+  @spec shortest_path(
+          t(),
+          coordinate(),
+          coordinate(),
+          AStar.cost_fn(),
+          AStar.cost_fn()
+        ) :: list()
+  @spec shortest_path(
+          t(),
+          coordinate(),
+          coordinate(),
+          AStar.cost_fn(),
+          AStar.cost_fn(),
+          (coordinate() -> boolean())
+        ) :: list()
+  @doc """
+  Given a grid and a starting point, this function will find the shortest path from the
+  starting point to a cell containing the target DATA. The path is calculated using A*.
+
+  The functions to calculate the h and g costs of a given node are the callers responsibility, as they
+  depend on the context of the data stored in the grid. These functions will be provided with the
+  coordinates of the vertex under test; the data can be obtained using [Grid.point/2]
+
+  A visited set is maintained to ensure no cell is visited more than once. Additionally,
+  an optional neighbour_predicate can be provided to exclude certain neighbouring cells.
+
+  Once a path is found, {:ok, path} will be returned, where path is a list of coordinates.
+
+  If a path could not be found, {:error} will be returned instead,
+  """
+  def shortest_path(grid, current, target, h, g, neighbour_predicate \\ fn _ -> true end) do
+    ns_fn = &(neighbours(grid, &1) |> Enum.filter(fn n -> neighbour_predicate.(n) end))
+    goal_fn = &(point!(grid, &1) == target)
+
+    AStar.shortest_path({ns_fn, g, h}, current, goal_fn)
   end
 
   @spec filter_data(t(), [any()]) :: t()

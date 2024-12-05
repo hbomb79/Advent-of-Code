@@ -1,24 +1,16 @@
 defmodule Puzzles.Day04 do
   def part1(input) do
     grid = Grid.new_from_string(input)
+    dirs = [:up, :down, :left, :right, :up_left, :up_right, :down_left, :down_right]
 
     Grid.filter_data(grid, ["X"]).data
     |> Map.keys()
-    |> Enum.map(fn point ->
-      Enum.count(
-        [:up, :down, :left, :right, :up_left, :up_right, :down_left, :down_right],
-        fn dir ->
-          case Grid.cast_ray(grid, point, dir, 3) do
-            ps when length(ps) == 4 ->
-              Enum.map(ps, &Grid.point!(grid, &1)) == ["X", "M", "A", "S"]
-
-            _ ->
-              false
-          end
-        end
-      )
+    |> List.foldl(0, fn point, acc ->
+      Enum.count(dirs, fn dir ->
+        Grid.cast_ray(grid, point, dir, 3)
+        |> Enum.map(&Grid.point!(grid, &1)) == ["X", "M", "A", "S"]
+      end) + acc
     end)
-    |> Enum.sum()
   end
 
   def part2(input) do
@@ -37,11 +29,8 @@ defmodule Puzzles.Day04 do
         )
 
       case points do
-        [tl, tr, bl, br] ->
-          topleft = Grid.point!(grid, tl)
-          topright = Grid.point!(grid, tr)
-          botleft = Grid.point!(grid, bl)
-          botright = Grid.point!(grid, br)
+        [_, _, _, _] ->
+          [topleft, topright, botleft, botright] = Enum.map(points, &Grid.point!(grid, &1))
 
           a = (topleft == "M" && botright == "S") || (topleft == "S" && botright == "M")
           b = (topright == "M" && botleft == "S") || (topright == "S" && botleft == "M")

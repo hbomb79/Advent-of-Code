@@ -147,4 +147,42 @@ defmodule GridTest do
     assert Grid.point!(grid2, {1, 0}) == "B"
     assert Grid.point!(grid2, {1, 2}) == "O"
   end
+
+  describe "Grid.shortest_path" do
+    test "finds shortest path" do
+      grid = Grid.new_from_string("ABCD\nEFGH\nIJKL\nMNOP")
+
+      # Find 'J' point target (for use with h())
+      {{tx, ty}, _} = Grid.find_value!(grid, "J")
+
+      # Manhatten distance heuristic
+      h = fn {x, y} -> abs(tx - x) + abs(ty - y) end
+
+      # Constant cost for each node
+      g = fn _ -> 1 end
+
+      # Expected path: right -> down -> down
+      assert Grid.shortest_path(grid, {0, 0}, "J", h, g) == [{1, 0}, {1, 1}, {1, 2}]
+    end
+
+    test "avoids high cost nodes" do
+      grid = Grid.new_from_string("ABCD\nEFGH\nIJKL\nMNOP")
+
+      # Find 'J' point target (for use with h())
+      {{tx, ty}, _} = Grid.find_value!(grid, "J")
+
+      # Manhatten distance heuristic
+      h = fn {x, y} -> abs(tx - x) + abs(ty - y) end
+
+      # Constant cost for each node, except for {1,1} which we'll increase to a high
+      # value to discourage the algorithm from using it
+      g = fn
+        {1, 1} -> 10
+        _ -> 1
+      end
+
+      # Expected path: down -> down -> right
+      assert Grid.shortest_path(grid, {0, 0}, "J", h, g) == [{0, 1}, {0, 2}, {1, 2}]
+    end
+  end
 end
