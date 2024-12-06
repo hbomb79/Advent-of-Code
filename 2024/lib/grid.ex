@@ -186,6 +186,24 @@ defmodule Grid do
     end
   end
 
+  def rotate_dir(dir, :clockwise) do
+    case dir do
+      :up -> :right
+      :down -> :left
+      :left -> :up
+      :right -> :down
+    end
+  end
+
+  def rotate_dir(dir, :anticlockwise) do
+    case dir do
+      :up -> :left
+      :down -> :right
+      :left -> :down
+      :right -> :up
+    end
+  end
+
   defp dir_to_delta(dir) do
     case dir do
       :up -> {0, -1}
