@@ -217,7 +217,33 @@ defmodule Grid do
     end
   end
 
-  defp is_oob(grid, {x, y}) do
+  def dir_opposite(dir) do
+    case dir do
+      :up -> :down
+      :down -> :up
+      :left -> :right
+      :right -> :left
+      :up_left -> :down_right
+      :up_right -> :down_left
+      :down_left -> :up_right
+      :down_right -> :up_left
+    end
+  end
+
+  def delta_to_dir(dx, dy) do
+    case {dx, dy} do
+      {0, -1} -> :up
+      {0, 1} -> :down
+      {-1, 0} -> :left
+      {1, 0} -> :right
+      {-1, -1} -> :up_left
+      {1, -1} -> :up_right
+      {-1, 1} -> :down_left
+      {1, 1} -> :down_right
+    end
+  end
+
+  def is_oob(grid, {x, y}) do
     x < 0 || x >= grid.width || y < 0 || y >= grid.height
   end
 end

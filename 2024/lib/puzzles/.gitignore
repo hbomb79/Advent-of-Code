@@ -1,1 +1,2 @@
-input/
+input/*.txt
+!input/*-example.txt
