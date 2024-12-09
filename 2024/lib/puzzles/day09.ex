@@ -1,82 +1,38 @@
 defmodule Puzzles.Day09 do
   def part1(input) do
-    String.trim(input)
-    |> String.graphemes()
-    |> Enum.reduce({[], 0, true}, fn digit, {acc, idx, is_file} ->
-      kind = if is_file, do: :file, else: :empty
-      n = [{:kind, kind}]
-      n = if is_file, do: Keyword.put(n, :id, idx), else: n
+    parts = parse(input, :singles) |> elem(0) |> Enum.reverse()
 
-      n = List.duplicate(n, String.to_integer(digit))
-
-      idx = if is_file, do: idx + 1, else: idx
-      {n ++ acc, idx, !is_file}
-    end)
-    |> elem(0)
-    |> Enum.reverse()
-    |> swap()
-    |> Enum.with_index()
-    |> Enum.reduce(0, fn {e, idx}, acc ->
-      if Keyword.get(e, :kind) == :file do
-        acc + Keyword.get(e, :id) * idx
-      else
-        acc
-      end
-    end)
+    swap(parts, length(parts) - 1, [], [])
+    |> Stream.with_index()
+    |> Stream.reject(fn {e, _} -> e[:kind] == :empty end)
+    |> Enum.reduce(0, fn {e, idx}, acc -> acc + Keyword.get(e, :id) * idx end)
   end
 
   def part2(input) do
-    {list, max_id, _} =
-      String.trim(input)
-      |> String.graphemes()
-      |> Enum.reduce({[], 0, true}, fn digit, {acc, idx, is_file} ->
-        kind = if is_file, do: :file, else: :empty
-        n = [{:kind, kind}, {:size, String.to_integer(digit)}]
-        n = if is_file, do: Keyword.put(n, :id, idx), else: n
-
-        idx = if is_file, do: idx + 1, else: idx
-        {[n | acc], idx, !is_file}
-      end)
+    {list, max_id, _} = parse(input, :batch)
 
     bulk_swap(Enum.reverse(list), max_id - 1)
     |> merge()
-    |> Enum.flat_map(fn e ->
-      List.duplicate(e, e[:size])
-    end)
-    |> Enum.with_index()
-    |> Enum.reduce(0, fn {e, idx}, acc ->
-      if Keyword.get(e, :kind) == :file do
-        acc + e[:id] * idx
-      else
-        acc
-      end
-    end)
+    |> Stream.flat_map(&List.duplicate(&1, &1[:size]))
+    |> Stream.with_index()
+    |> Stream.reject(fn {e, _} -> e[:kind] == :empty end)
+    |> Enum.reduce(0, fn {e, idx}, acc -> acc + e[:id] * idx end)
   end
 
-  defp swap(list) do
-    # Find last file element
-    rev = Enum.reverse(list)
-    last_idx = rev |> Enum.find_index(fn e -> e[:kind] == :file end)
-    last = Enum.at(rev, last_idx)
+  defp swap(_, -1, pre, post), do: Enum.reverse(pre) ++ Enum.reverse(post)
 
-    # Find first element with space
-    empty_idx = Enum.find_index(list, fn e -> e[:kind] == :empty end)
-    empty = Enum.at(list, empty_idx)
+  defp swap([empty | tl] = list, file_idx, pre, post) do
+    last = Enum.at(list, file_idx)
 
-    last_idx = length(list) - last_idx - 1
+    cond do
+      last[:kind] == :empty ->
+        swap(list, file_idx - 1, pre, [last | post])
 
-    # If empty idx is to the right of the last, then we must be done
-    if empty_idx >= last_idx do
-      list
-    else
-      new_list =
-        list
-        |> List.delete_at(last_idx)
-        |> List.delete_at(empty_idx)
-        |> List.insert_at(empty_idx, last)
-        |> List.insert_at(last_idx, empty)
+      empty[:kind] == :file ->
+        swap(tl, file_idx - 1, [empty | pre], post)
 
-      swap(new_list)
+      empty[:kind] == :empty ->
+        swap(tl, file_idx - 2, [last | pre], [empty | post])
     end
   end
 
@@ -130,5 +86,24 @@ defmodule Puzzles.Day09 do
       end
     end)
     |> Enum.reverse()
+  end
+
+  defp parse(input, mode) do
+    String.trim(input)
+    |> String.graphemes()
+    |> Enum.reduce({[], 0, true}, fn digit, {acc, idx, is_file} ->
+      kind = if is_file, do: :file, else: :empty
+      digit = String.to_integer(digit)
+
+      n = [{:kind, kind}]
+      n = if is_file, do: Keyword.put(n, :id, idx), else: n
+
+      idx = if is_file, do: idx + 1, else: idx
+
+      case mode do
+        :singles -> {List.duplicate(n, digit) ++ acc, idx, !is_file}
+        :batch -> {[Keyword.put(n, :size, digit) | acc], idx, !is_file}
+      end
+    end)
   end
 end
