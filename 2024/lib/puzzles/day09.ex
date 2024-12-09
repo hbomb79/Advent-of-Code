@@ -2,19 +2,19 @@ defmodule Puzzles.Day09 do
   def part1(input) do
     parts = parse(input, :singles) |> elem(0) |> Enum.reverse()
 
-    swap(parts, length(parts) - 1, [], [])
-    |> Stream.with_index()
-    |> Stream.reject(fn {e, _} -> e[:kind] == :empty end)
-    |> Enum.reduce(0, fn {e, idx}, acc -> acc + Keyword.get(e, :id) * idx end)
+    swap(parts, length(parts) - 1, [], []) |> checksum()
   end
 
   def part2(input) do
     {list, max_id, _} = parse(input, :batch)
 
     bulk_swap(Enum.reverse(list), max_id - 1)
-    |> merge()
     |> Stream.flat_map(&List.duplicate(&1, &1[:size]))
-    |> Stream.with_index()
+    |> checksum()
+  end
+
+  defp checksum(parts) do
+    Stream.with_index(parts)
     |> Stream.reject(fn {e, _} -> e[:kind] == :empty end)
     |> Enum.reduce(0, fn {e, idx}, acc -> acc + e[:id] * idx end)
   end
@@ -36,51 +36,37 @@ defmodule Puzzles.Day09 do
     end
   end
 
-  defp bulk_swap(list, -1), do: list
+  defp bulk_swap(list, -1), do: merge(list)
 
   defp bulk_swap(list, id) do
-    to_move_idx = Enum.find_index(list, fn e -> e[:kind] == :file && e[:id] == id end)
+    to_move_idx = Enum.find_index(list, fn e -> e[:id] == id end)
     to_move = Enum.at(list, to_move_idx)
 
-    # Find first element with adequate space
-    empty_idx =
-      Enum.find_index(list, fn e -> e[:kind] == :empty && e[:size] >= to_move[:size] end)
+    empty_idx = list |> Enum.find_index(&(&1[:kind] == :empty && &1[:size] >= to_move[:size]))
 
     if empty_idx == nil || empty_idx > to_move_idx do
       bulk_swap(list, id - 1)
     else
       empty = Enum.at(list, empty_idx)
 
-      new_list =
-        if empty[:size] > to_move[:size] do
-          list
-          |> List.delete_at(to_move_idx)
-          |> List.insert_at(to_move_idx, [{:kind, :empty}, {:size, to_move[:size]}])
-          |> List.delete_at(empty_idx)
-          |> List.insert_at(empty_idx, to_move)
-          |> List.insert_at(empty_idx + 1, [
-            {:kind, :empty},
-            {:size, empty[:size] - to_move[:size]}
-          ])
-        else
-          list
-          |> List.delete_at(to_move_idx)
-          |> List.delete_at(empty_idx)
-          |> List.insert_at(empty_idx, to_move)
-          |> List.insert_at(to_move_idx, empty)
-        end
+      if empty[:size] > to_move[:size] do
+        split = [{:kind, :empty}, {:size, empty[:size] - to_move[:size]}]
 
-      bulk_swap(new_list, id - 1)
+        list
+        |> List.replace_at(to_move_idx, [{:kind, :empty}, {:size, to_move[:size]}])
+        |> List.replace_at(empty_idx, to_move)
+        |> List.insert_at(empty_idx + 1, split)
+      else
+        list |> List.replace_at(empty_idx, to_move) |> List.replace_at(to_move_idx, empty)
+      end
+      |> bulk_swap(id - 1)
     end
   end
 
   def merge([hd | tl]) do
     Enum.reduce(tl, [hd], fn element, [a | rest] = acc ->
-      kind = element[:kind]
-      size = element[:size]
-
-      if kind == :empty && a[:kind] == :empty do
-        [[{:kind, :empty}, {:size, size + a[:size]}] | rest]
+      if element[:kind] == :empty && a[:kind] == :empty do
+        [[{:kind, :empty}, {:size, element[:size] + a[:size]}] | rest]
       else
         [element | acc]
       end
