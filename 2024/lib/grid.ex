@@ -38,6 +38,11 @@ defmodule Grid do
     Input.parse_lines(string) |> new_from_lines()
   end
 
+  def map(grid, fun) do
+    new_data = Map.new(grid.data, fun)
+    struct!(grid, data: new_data)
+  end
+
   @spec point(t(), coordinate()) :: :error | {:ok, any()}
   def point(grid, {x, y}) do
     Map.fetch(grid.data, {x, y})
