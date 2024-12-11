@@ -12,23 +12,22 @@ defmodule Puzzles.Day11 do
   def blink(stones, 0), do: stones |> Map.values() |> Enum.sum()
 
   def blink(stones, step) do
-    Enum.reduce(stones, Map.new(), fn {stone, count}, acc ->
-      cond do
-        stone == 0 ->
-          map_add(acc, 1, count)
+    Enum.reduce(stones, Map.new(), fn
+      {0, count}, acc ->
+        update(acc, 1, count)
 
-        rem(length(Integer.digits(stone)), 2) == 0 ->
-          str = Integer.to_string(stone)
-          {l, r} = String.split_at(str, div(String.length(str), 2))
+      {stone, count}, acc ->
+        case Integer.digits(stone) do
+          even when rem(length(even), 2) == 0 ->
+            {l, r} = Enum.split(even, div(length(even), 2))
+            acc |> update(Integer.undigits(l), count) |> update(Integer.undigits(r), count)
 
-          acc |> map_add(String.to_integer(l), count) |> map_add(String.to_integer(r), count)
-
-        true ->
-          map_add(acc, stone * 2024, count)
-      end
+          _ ->
+            update(acc, stone * 2024, count)
+        end
     end)
     |> blink(step - 1)
   end
 
-  defp map_add(map, key, value), do: Map.put(map, key, Map.get(map, key, 0) + value)
+  defp update(map, key, value), do: Map.update(map, key, value, &(&1 + value))
 end
