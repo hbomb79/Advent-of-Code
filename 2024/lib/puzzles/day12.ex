@@ -58,10 +58,9 @@ defmodule Puzzles.Day12 do
       else
         [{seed, type}] = Enum.take(g.data, 1)
         region = floodfill(g, seed, type)
+        new_data = Enum.reduce(region, g.data, &Map.delete(&2, &1))
 
-        new_data = Grid.filter_fn(g, fn {point, _} -> !MapSet.member?(region, point) end)
-
-        {{region, type}, new_data}
+        {{region, type}, struct!(g, data: new_data)}
       end
     end)
     |> Enum.to_list()
@@ -75,10 +74,9 @@ defmodule Puzzles.Day12 do
       |> Enum.reject(fn point ->
         case Grid.point(grid, point) do
           :error -> true
-          {:ok, v} -> v != type
+          {:ok, v} -> v != type || MapSet.member?(seen, point)
         end
       end)
-      |> Enum.reject(&MapSet.member?(seen, &1))
 
     if length(n) == 0 do
       seen
