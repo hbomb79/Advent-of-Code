@@ -209,7 +209,7 @@ defmodule Grid do
     end
   end
 
-  defp dir_to_delta(dir) do
+  def dir_to_delta(dir) do
     case dir do
       :up -> {0, -1}
       :down -> {0, 1}

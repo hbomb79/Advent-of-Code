@@ -55,4 +55,9 @@ defmodule PuzzleTest do
     assert Runner.run("11", 1) == 229_043
     assert Runner.run("11", 2) == 272_673_043_446_478
   end
+
+  test "D12" do
+    assert Runner.run("12", 1) == 1_457_298
+    assert Runner.run("12", 2) == 921_636
+  end
 end
