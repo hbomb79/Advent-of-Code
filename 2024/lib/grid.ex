@@ -209,6 +209,15 @@ defmodule Grid do
     end
   end
 
+  def print(grid) do
+    for y <- 0..(grid.height - 1) do
+      Enum.reduce(0..(grid.width - 1), "", fn x, acc ->
+        acc <> Map.fetch!(grid.data, {x, y})
+      end)
+      |> IO.inspect()
+    end
+  end
+
   def dir_to_delta(dir) do
     case dir do
       :up -> {0, -1}
