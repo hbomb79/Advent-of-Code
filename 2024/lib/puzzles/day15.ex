@@ -27,28 +27,25 @@ defmodule Puzzles.Day15 do
 
   defp box_scan(map, points, {dx, dy} = vel, acc \\ []) do
     cond do
-      Enum.any?(points, fn {x, y} -> Map.fetch!(map, {x + dx, y + dy}) == "#" end) ->
+      Enum.any?(points, &(Map.fetch!(map, add(&1, vel)) == "#")) ->
         # A wall is ahead of at least one of the points in the 'wave'. Bail.
         :error
 
-      Enum.all?(points, fn {x, y} -> Map.fetch!(map, {x + dx, y + dy}) == "." end) ->
+      Enum.all?(points, &(Map.fetch!(map, add(&1, vel)) == ".")) ->
         # Empty space ahead of all points in 'wave'. We're done.
         {:ok, acc}
 
       true ->
-        # Recurse while grabbing the new boxes we must be encountering.
-        # These new boxes become the 'wavefront' of the search, and are the only
-        # points considered when deciding when the search is done (i.e. reached a wall, or all empty space)
+        # Grab the new obstacles ahead of us and recurse. These new boxes become the 'wavefront' of the search.
         new_points =
-          Enum.reduce(points, [], fn {x, y}, acc ->
-            n = Map.fetch!(map, {x + dx, y + dy})
-
-            cond do
-              Enum.any?(points, fn p -> p == {x + dx, y + dy} end) -> acc
-              n == "[" -> [{x + dx, y + dy} | [{x + dx + 1, y + dy} | acc]]
-              n == "]" -> [{x + dx - 1, y + dy} | [{x + dx, y + dy} | acc]]
-              n == "O" -> [{x + dx, y + dy} | acc]
-              n == "." -> acc
+          points
+          |> Enum.reject(&Enum.member?(points, add(&1, vel)))
+          |> Enum.reduce([], fn {x, y} = p, acc ->
+            case Map.fetch!(map, add(p, vel)) do
+              "[" -> [{x + dx, y + dy} | [{x + dx + 1, y + dy} | acc]]
+              "]" -> [{x + dx - 1, y + dy} | [{x + dx, y + dy} | acc]]
+              "O" -> [{x + dx, y + dy} | acc]
+              "." -> acc
             end
           end)
 
@@ -57,63 +54,40 @@ defmodule Puzzles.Day15 do
   end
 
   defp move(grid, instr) do
+    {pos, _} = Grid.find_value!(grid, "@")
+    delta = Grid.dir_to_delta(instr)
+    npos = add(pos, delta)
     map = grid.data
-    {{x, y} = pos, _} = Grid.find_value!(grid, "@")
-    {dx, dy} = Grid.dir_to_delta(instr)
-    {nx, ny} = {x + dx, y + dy}
 
-    case Map.fetch(map, {nx, ny}) do
-      {:ok, "#"} ->
-        # Found a wall. No movement
-        map
-
-      {:ok, "."} ->
-        # Empty space, robots position becomes empty, next position becomes robot
-        map
-        |> Map.replace(pos, ".")
-        |> Map.replace({nx, ny}, "@")
-
-      {:ok, "O"} ->
-        shift_single_boxes(map, pos, {nx, ny}, {dx, dy})
-
-      {:ok, "["} ->
-        shift_joined_boxes(map, pos, {nx, ny}, {dx, dy})
-
-      {:ok, "]"} ->
-        shift_joined_boxes(map, pos, {nx, ny}, {dx, dy})
+    case Map.fetch!(map, npos) do
+      "#" -> map
+      "." -> %{map | pos => ".", npos => "@"}
+      "O" -> shift_single_boxes(map, pos, npos, delta)
+      "[" -> shift_joined_boxes(map, pos, npos, delta)
+      "]" -> shift_joined_boxes(map, pos, npos, delta)
     end
   end
 
-  defp shift_single_boxes(map, old, new, {dx, dy}) do
-    case box_scan(map, [old], {dx, dy}) do
-      :error ->
-        map
-
-      {:ok, [{ex, ey} | _]} ->
-        map
-        |> Map.replace(old, ".")
-        |> Map.replace({ex + dx, ey + dy}, "O")
-        |> Map.replace(new, "@")
+  defp shift_single_boxes(map, old, new, delta) do
+    case box_scan(map, [old], delta) do
+      :error -> map
+      {:ok, [empty | _]} -> %{map | old => ".", add(empty, delta) => "O", new => "@"}
     end
   end
 
-  defp shift_joined_boxes(map, old, new, {dx, dy}) do
-    case box_scan(map, [old], {dx, dy}) do
+  defp add({px, py}, {dx, dy}), do: {px + dx, py + dy}
+
+  defp shift_joined_boxes(map, old, new, delta) do
+    case box_scan(map, [old], delta) do
       :error ->
         map
 
       {:ok, boxes} ->
         Enum.chunk_every(boxes, 2)
-        |> Enum.reduce(map, fn
-          [{bsx, bsy} = bs, {bex, bey} = be], acc ->
-            acc
-            |> Map.replace(bs, ".")
-            |> Map.replace(be, ".")
-            |> Map.replace({bsx + dx, bsy + dy}, "[")
-            |> Map.replace({bex + dx, bey + dy}, "]")
-
-          _, acc ->
-            acc
+        |> Enum.reduce(map, fn [bs, be], acc ->
+          bs_new = add(bs, delta)
+          be_new = add(be, delta)
+          %{acc | bs => ".", be => ".", bs_new => "[", be_new => "]"}
         end)
         |> Map.replace(old, ".")
         |> Map.replace(new, "@")
