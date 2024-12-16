@@ -21,7 +21,8 @@ defmodule Aoc2024.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:req, "~> 0.5.8"}
+      {:req, "~> 0.5.8"},
+      {:prioqueue, "~> 0.2.0"}
     ]
   end
 end
