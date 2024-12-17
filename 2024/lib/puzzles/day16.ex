@@ -6,7 +6,7 @@ defmodule Puzzles.Day16 do
 
   def part2(input) do
     {seed, parents, _dists} = solve(input)
-    path_tiles([seed], parents, MapSet.new([seed])) |> MapSet.size()
+    walk_path([seed], parents, MapSet.new([seed])) |> MapSet.size()
   end
 
   defp solve(input) do
@@ -15,7 +15,8 @@ defmodule Puzzles.Day16 do
     {target, _} = Grid.find_value!(g, "E")
 
     {dists, parents} =
-      djikstra(Prioqueue.new([{0, start, :right}]), Map.new(), Map.new(), target, neighbours(g))
+      Prioqueue.new([{0, start, :right}])
+      |> dijkstra(%{}, %{}, target, neighbours(g))
 
     # Find cheapest direction for target
     dir =
@@ -28,7 +29,7 @@ defmodule Puzzles.Day16 do
   end
 
   defp neighbours(g) do
-    fn {current, cost, dir} ->
+    fn {cost, current, dir} ->
       clockwise = Grid.rotate_dir(dir, :clockwise)
       aclockwise = Grid.rotate_dir(dir, :anticlockwise)
 
@@ -41,26 +42,13 @@ defmodule Puzzles.Day16 do
     end
   end
 
-  defp path_tiles([], _, tiles), do: tiles
-
-  defp path_tiles([hd | rest], parents, tiles) do
-    ps = Map.get(parents, hd, [])
-
-    {queue, tiles} =
-      Enum.reduce(ps, {rest, tiles}, fn {tile, _} = parent, {q, ts} ->
-        {[parent | q], MapSet.put(ts, tile)}
-      end)
-
-    path_tiles(queue, parents, tiles)
-  end
-
-  defp djikstra(pq, dists, parents, target, nfn) do
+  defp dijkstra(pq, dists, parents, target, nfn) do
     case Prioqueue.extract_min(pq) do
-      {:ok, {{dist, point, dir}, pq}} ->
+      {:ok, {{_cost, point, dir} = node, pq}} ->
         {npq, ndists, nparents} =
-          nfn.({point, dist, dir})
-          |> Enum.reduce({pq, dists, parents}, fn n, {pq, dists, parents} ->
-            {n_dist, n_point, n_dir} = n
+          nfn.(node)
+          |> Enum.reduce({pq, dists, parents}, fn {n_dist, n_point, n_dir} = n,
+                                                  {pq, dists, parents} ->
             key = {n_point, n_dir}
 
             cond do
@@ -72,18 +60,29 @@ defmodule Puzzles.Day16 do
                 }
 
               n_dist == Map.get(dists, key) ->
-                {pq, dists,
-                 Map.update!(parents, key, fn existing -> MapSet.put(existing, {point, dir}) end)}
+                {pq, dists, Map.update!(parents, key, &MapSet.put(&1, {point, dir}))}
 
               true ->
                 {pq, dists, parents}
             end
           end)
 
-        djikstra(npq, ndists, nparents, target, nfn)
+        dijkstra(npq, ndists, nparents, target, nfn)
 
       {:error, :empty} ->
         {dists, parents}
     end
+  end
+
+  defp walk_path([], _, tiles), do: tiles
+
+  defp walk_path([hd | rest], parents, tiles) do
+    {queue, tiles} =
+      Map.get(parents, hd, [])
+      |> Enum.reduce({rest, tiles}, fn {tile, _} = parent, {q, ts} ->
+        {[parent | q], MapSet.put(ts, tile)}
+      end)
+
+    walk_path(queue, parents, tiles)
   end
 end
