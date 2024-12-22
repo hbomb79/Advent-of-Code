@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Solve do
       )
 
     day = Keyword.fetch!(opts, :day)
+    {:ok, _} = Application.ensure_all_started(:memoize)
 
     if Keyword.get(opts, :part, 1) == 1 do
       Runner.run(day, 1, opts[:test]) |> IO.inspect(label: "Part 1 Results")

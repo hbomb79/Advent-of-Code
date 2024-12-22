@@ -114,21 +114,6 @@ defmodule Grid do
     |> Enum.reverse()
   end
 
-  @spec shortest_path(
-          t(),
-          coordinate(),
-          coordinate(),
-          AStar.cost_fn(),
-          AStar.cost_fn()
-        ) :: list()
-  @spec shortest_path(
-          t(),
-          coordinate(),
-          coordinate(),
-          AStar.cost_fn(),
-          AStar.cost_fn(),
-          (coordinate() -> boolean())
-        ) :: list()
   @doc """
   Given a grid and a starting point, this function will find the shortest path from the
   starting point to a cell containing the target DATA. The path is calculated using A*.

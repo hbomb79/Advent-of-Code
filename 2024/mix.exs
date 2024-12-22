@@ -22,7 +22,8 @@ defmodule Aoc2024.MixProject do
   defp deps do
     [
       {:req, "~> 0.5.8"},
-      {:prioqueue, "~> 0.2.0"}
+      {:prioqueue, "~> 0.2.0"},
+      {:memoize, "~> 1.4.3"}
     ]
   end
 end
