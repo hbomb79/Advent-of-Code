@@ -5,11 +5,8 @@ defmodule Puzzles.Day21 do
   def part2(input), do: run(input, 25)
 
   def run(input, num) do
-    np = get_keypad_grid(:keypad)
-    np_costs = calc_costs(np)
-
-    dp = get_keypad_grid(:directional)
-    dp_costs = calc_costs(dp)
+    np_costs = get_keypad_grid(:keypad) |> calc_costs()
+    dp_costs = get_keypad_grid(:directional) |> calc_costs()
 
     String.split(input, "\n", trim: true)
     |> Enum.reduce(0, fn line, acc ->
